@@ -1,0 +1,13 @@
+version: "3.9"
+services:
+  backend:
+    build: ./back-end
+    ports: ["8000:8000"]
+    depends_on: [db]
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: trader
+      POSTGRES_PASSWORD: trader
+      POSTGRES_DB: domains
+    ports: ["5432:5432"]
