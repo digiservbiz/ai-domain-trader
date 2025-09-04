@@ -1,0 +1,6 @@
+from abc import ABC, abstractmethod
+class Marketplace(ABC):
+    @abstractmethod
+    def list(self, domain: str, price: float) -> str: ...
+    @abstractmethod
+    def delist(self, listing_id: str) -> bool: ...
