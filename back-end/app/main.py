@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router
+from app.api.ws import router as ws_router
 
 app = FastAPI(title="AI Domain Trader")
 
@@ -11,4 +12,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 app.include_router(router)
+app.include_router(ws_router)
