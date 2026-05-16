@@ -7,4 +7,6 @@ class Settings:
     GODADDY_SECRET   = os.getenv("GODADDY_SECRET")
     DATABASE_URL     = os.getenv("DATABASE_URL")
     REDIS_URL        = os.getenv("REDIS_URL")
+    MOZ_ACCESS_ID    = os.getenv("MOZ_ACCESS_ID")
+    MOZ_SECRET_KEY   = os.getenv("MOZ_SECRET_KEY")
 settings = Settings()
