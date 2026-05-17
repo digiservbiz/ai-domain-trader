@@ -46,6 +46,29 @@ services:
       redis:
         condition: service_healthy
 
+  celery-worker:
+    build: ./back-end
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://trader:trader@db:5432/domains
+      REDIS_URL: redis://redis:6379/0
+    command: ["celery", "-A", "app.celery_app.celery", "worker", "--loglevel=info", "--concurrency=2"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  celery-beat:
+    build: ./back-end
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://trader:trader@db:5432/domains
+      REDIS_URL: redis://redis:6379/0
+    command: ["celery", "-A", "app.celery_app.celery", "beat", "--loglevel=info"]
+    depends_on:
+      - celery-worker
+
   frontend:
     build: ./front-end
     ports: ["3000:3000"]
