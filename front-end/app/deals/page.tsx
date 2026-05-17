@@ -29,7 +29,7 @@ export default function LiveDeals() {
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Live Domain Deals</h1>
       <ul className="space-y-2">
-        {data.map((d) => (
+        {data.map((d: Deal) => (
           <li
             key={d.domain}
             className="flex items-center justify-between rounded-lg bg-slate-800 px-4 py-3"
