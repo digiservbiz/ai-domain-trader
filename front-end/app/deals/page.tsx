@@ -8,8 +8,11 @@ interface Deal {
 }
 
 export default function LiveDeals() {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
+  const wsUrl = apiUrl.replace(/^http/, 'ws') + '/ws/deals'
+
   const { data, error } = useSWRSubscription(
-    'ws://localhost:8000/ws/deals',
+    wsUrl,
     (key, { next }) => {
       const ws = new WebSocket(key)
       ws.onmessage = (e) => next(null, JSON.parse(e.data) as Deal[])
