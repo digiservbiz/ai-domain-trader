@@ -15,12 +15,12 @@ def _mock_openai(content: str):
 
 
 def test_brainstorm_no_api_key(monkeypatch):
-    monkeypatch.setattr(n.settings, "OPENAI_API_KEY", None)
+    monkeypatch.setattr(n.settings, "OPENROUTER_API_KEY", None)
     assert n.brainstorm(["ai"], "tech") == []
 
 
 def test_brainstorm_returns_valid_domains(monkeypatch):
-    monkeypatch.setattr(n.settings, "OPENAI_API_KEY", "sk-test")
+    monkeypatch.setattr(n.settings, "OPENROUTER_API_KEY", "sk-or-test")
     body = "aifast.com\nquickbot.io\nnot-a-domain\nspeedai.ai\n"
     with patch("app.services.namegen.OpenAI", return_value=_mock_openai(body)):
         result = n.brainstorm(["ai", "fast"], "tech")
@@ -31,7 +31,7 @@ def test_brainstorm_returns_valid_domains(monkeypatch):
 
 
 def test_brainstorm_strips_bullets(monkeypatch):
-    monkeypatch.setattr(n.settings, "OPENAI_API_KEY", "sk-test")
+    monkeypatch.setattr(n.settings, "OPENROUTER_API_KEY", "sk-or-test")
     body = "• aifast.com\n- quickbot.io\n– speedai.ai\n"
     with patch("app.services.namegen.OpenAI", return_value=_mock_openai(body)):
         result = n.brainstorm(["ai"], "tech")
@@ -41,15 +41,15 @@ def test_brainstorm_strips_bullets(monkeypatch):
 
 
 def test_brainstorm_respects_count_limit(monkeypatch):
-    monkeypatch.setattr(n.settings, "OPENAI_API_KEY", "sk-test")
+    monkeypatch.setattr(n.settings, "OPENROUTER_API_KEY", "sk-or-test")
     body = "\n".join(f"domain{i}.com" for i in range(20))
     with patch("app.services.namegen.OpenAI", return_value=_mock_openai(body)):
         result = n.brainstorm(["x"], "niche", count=5)
     assert len(result) == 5
 
 
-def test_brainstorm_openai_error_returns_empty(monkeypatch):
-    monkeypatch.setattr(n.settings, "OPENAI_API_KEY", "sk-test")
+def test_brainstorm_error_returns_empty(monkeypatch):
+    monkeypatch.setattr(n.settings, "OPENROUTER_API_KEY", "sk-or-test")
     client = MagicMock()
     client.chat.completions.create.side_effect = Exception("API error")
     with patch("app.services.namegen.OpenAI", return_value=client):

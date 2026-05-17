@@ -15,12 +15,15 @@ _SYSTEM = (
 
 
 def brainstorm(keywords: list[str], niche: str, count: int = 10) -> list[str]:
-    """Return up to `count` brandable domain name suggestions."""
-    if not settings.OPENAI_API_KEY:
-        logger.warning("OPENAI_API_KEY not set — returning empty domain list")
+    """Return up to `count` brandable domain name suggestions via OpenRouter."""
+    if not settings.OPENROUTER_API_KEY:
+        logger.warning("OPENROUTER_API_KEY not set — returning empty domain list")
         return []
 
-    client = OpenAI(api_key=settings.OPENAI_API_KEY)
+    client = OpenAI(
+        api_key=settings.OPENROUTER_API_KEY,
+        base_url="https://openrouter.ai/api/v1",
+    )
     prompt = (
         f"Generate {count} unique, brandable domain names for a {niche} startup. "
         f"Incorporate or riff on these keywords: {', '.join(keywords)}. "
@@ -30,7 +33,7 @@ def brainstorm(keywords: list[str], niche: str, count: int = 10) -> list[str]:
 
     try:
         resp = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=settings.OPENROUTER_MODEL,
             messages=[
                 {"role": "system", "content": _SYSTEM},
                 {"role": "user", "content": prompt},
@@ -40,7 +43,7 @@ def brainstorm(keywords: list[str], niche: str, count: int = 10) -> list[str]:
         )
         raw = resp.choices[0].message.content or ""
     except Exception as exc:
-        logger.error("OpenAI request failed: %s", exc)
+        logger.error("OpenRouter request failed: %s", exc)
         return []
 
     domains = []
