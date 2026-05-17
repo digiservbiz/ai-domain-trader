@@ -1,5 +1,38 @@
 # AI Domain Trader — Installation Guide
 
+## Automated setup (recommended)
+
+If you have **Git** and **Docker Desktop** installed, one script does everything:
+
+**Mac / Linux:**
+```bash
+git clone https://github.com/digiservbiz/ai-domain-trader.git
+cd ai-domain-trader
+git checkout claude/analyze-repo-gdyml
+./setup.sh
+```
+
+**Windows (PowerShell):**
+```powershell
+git clone https://github.com/digiservbiz/ai-domain-trader.git
+cd ai-domain-trader
+git checkout claude/analyze-repo-gdyml
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned   # one-time, if needed
+.\setup.ps1
+```
+
+The script will:
+- Check Docker is installed and running
+- Create your `.env` file
+- Ask for your OpenRouter API key and let you pick a model
+- Build and start all services
+- Wait for the backend to be healthy
+- Trigger the first domain scrape automatically
+
+> Prefer to do it manually? Follow the step-by-step guide below.
+
+---
+
 ## Prerequisites
 
 Install these tools before starting. Click each link for official instructions.
