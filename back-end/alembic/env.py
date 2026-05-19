@@ -5,6 +5,7 @@ import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from app.db.base import Base
 from app.config import settings
+import app.models.domain  # noqa: F401 — register models with Base.metadata
 config = context.config
 config.set_main_option('sqlalchemy.url', settings.DATABASE_URL)
 target_metadata = Base.metadata
