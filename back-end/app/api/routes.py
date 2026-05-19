@@ -1,8 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from app.services.namegen import brainstorm
 from app.models.valuation import value
 from app.marketplaces.godaddy import GoDaddyMarketplace
+from app.core.security import get_current_user
 
 router = APIRouter()
 
@@ -28,12 +29,12 @@ class ListBody(BaseModel):
 
 
 @router.post("/domains/{domain}/list")
-def list_domain(domain: str, body: ListBody):
+def list_domain(domain: str, body: ListBody, _: dict = Depends(get_current_user)):
     GoDaddyMarketplace().list(domain, body.price)
     return {"listed": True, "domain": domain, "price": body.price}
 
 
 @router.delete("/domains/{domain}/list")
-def delist_domain(domain: str):
+def delist_domain(domain: str, _: dict = Depends(get_current_user)):
     GoDaddyMarketplace().delist(domain)
     return {"delisted": True, "domain": domain}

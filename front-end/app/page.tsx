@@ -7,12 +7,26 @@ export default function Home() {
       <p className="text-slate-400 text-center max-w-md">
         Discover undervalued domains using AI-powered trend analysis and valuation.
       </p>
-      <Link
-        href="/deals"
-        className="rounded-lg bg-indigo-600 px-6 py-3 font-semibold hover:bg-indigo-500 transition-colors"
-      >
-        View Live Deals
-      </Link>
+      <div className="flex gap-3">
+        <Link
+          href="/deals"
+          className="rounded-lg bg-indigo-600 px-6 py-3 font-semibold hover:bg-indigo-500 transition-colors"
+        >
+          View Live Deals
+        </Link>
+        <Link
+          href="/login"
+          className="rounded-lg border border-slate-600 px-6 py-3 font-semibold hover:bg-slate-800 transition-colors"
+        >
+          Sign in
+        </Link>
+      </div>
+      <p className="text-slate-500 text-sm">
+        New here?{' '}
+        <Link href="/register" className="text-indigo-400 hover:text-indigo-300">
+          Create a free account
+        </Link>
+      </p>
     </main>
   )
 }
