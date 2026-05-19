@@ -1,5 +1,8 @@
 from abc import ABC, abstractmethod
+
 class Marketplace(ABC):
+    @abstractmethod
+    def check_availability(self, domain: str) -> dict: ...
     @abstractmethod
     def list(self, domain: str, price: float) -> str: ...
     @abstractmethod
