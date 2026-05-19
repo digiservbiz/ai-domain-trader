@@ -1,5 +1,7 @@
 'use client'
 import useSWRSubscription from 'swr/subscription'
+import DealCard from '@/components/DealCard'
+import Link from 'next/link'
 
 interface Deal {
   domain: string
@@ -22,27 +24,22 @@ export default function LiveDeals() {
   )
 
   if (error) return <p className="p-4 text-red-400">Failed to connect: {error.message}</p>
-  if (!data) return <p className="p-4 text-slate-400">Connecting to live deals...</p>
+  if (!data) return <p className="p-4 text-slate-400">Connecting to live deals…</p>
   if (data.length === 0) return <p className="p-4 text-slate-400">No deals available yet.</p>
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Live Domain Deals</h1>
-      <ul className="space-y-2">
+    <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Live Domain Deals</h1>
+        <Link href="/login" className="text-sm text-indigo-400 hover:text-indigo-300">
+          Sign in to list domains →
+        </Link>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
         {data.map((d: Deal) => (
-          <li
-            key={d.domain}
-            className="flex items-center justify-between rounded-lg bg-slate-800 px-4 py-3"
-          >
-            <span className="font-mono text-white">{d.domain}</span>
-            <span className="text-slate-300 text-sm">
-              Score <span className="text-green-400 font-semibold">{d.score}</span>
-              &nbsp;&bull;&nbsp;Est.&nbsp;
-              <span className="text-yellow-400 font-semibold">${d.estValue.toLocaleString()}</span>
-            </span>
-          </li>
+          <DealCard key={d.domain} domain={d.domain} score={d.score} estValue={d.estValue} />
         ))}
-      </ul>
+      </div>
     </div>
   )
 }
