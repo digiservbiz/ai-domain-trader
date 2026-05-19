@@ -13,3 +13,4 @@ dist/
 build/
 node_modules/
 .next/
+.claude/worktrees/
