@@ -38,44 +38,43 @@ function PnlCell({ pnl, pnl_pct }: { pnl: number; pnl_pct: number }) {
 
 export default function PortfolioPage() {
   const router = useRouter()
-  const [token, setToken] = useState<string | null>(null)
+  const [ready, setReady] = useState(false)
   const [domain, setDomain] = useState('')
   const [price, setPrice] = useState('')
   const [addError, setAddError] = useState('')
   const [adding, setAdding] = useState(false)
 
   useEffect(() => {
-    const t = localStorage.getItem('token')
-    if (!t) {
-      router.push('/login')
-    } else {
-      setToken(t)
-    }
+    fetch(`${API}/auth/me`, { credentials: 'include' }).then(r => {
+      if (r.status === 401) {
+        router.push('/login')
+      } else {
+        setReady(true)
+      }
+    }).catch(() => router.push('/login'))
   }, [router])
 
   const fetcher = (url: string) =>
-    fetch(url, { headers: { Authorization: `Bearer ${token}` } }).then((r) => {
+    fetch(url, { credentials: 'include' }).then((r) => {
       if (!r.ok) throw new Error('Failed to fetch portfolio')
       return r.json()
     })
 
   const { data, error, mutate } = useSWR<PortfolioData>(
-    token ? `${API}/portfolio` : null,
+    ready ? `${API}/portfolio` : null,
     fetcher
   )
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
-    if (!token || !domain.trim() || !price) return
+    if (!domain.trim() || !price) return
     setAdding(true)
     setAddError('')
     try {
       const res = await fetch(`${API}/portfolio`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ domain: domain.trim(), bought_price: parseFloat(price) }),
       })
       if (!res.ok) {
@@ -94,15 +93,14 @@ export default function PortfolioPage() {
   }
 
   async function handleRemove(d: string) {
-    if (!token) return
     await fetch(`${API}/portfolio/${encodeURIComponent(d)}`, {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include',
     })
     mutate()
   }
 
-  if (!token) return null
+  if (!ready) return null
 
   const totalPnl = data?.total_pnl ?? 0
   const pnlPos = totalPnl >= 0

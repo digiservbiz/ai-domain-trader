@@ -1,13 +1,24 @@
+'use client'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+
+const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
 export default function Home() {
+  const router = useRouter()
+
+  async function handleSignOut() {
+    await fetch(`${API}/auth/logout`, { method: 'POST', credentials: 'include' })
+    router.push('/')
+  }
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
       <h1 className="text-4xl font-bold tracking-tight">AI Domain Trader</h1>
       <p className="text-slate-400 text-center max-w-md">
         Discover undervalued domains using AI-powered trend analysis and valuation.
       </p>
-      <div className="flex gap-3">
+      <div className="flex gap-3 flex-wrap justify-center">
         <Link
           href="/deals"
           className="rounded-lg bg-indigo-600 px-6 py-3 font-semibold hover:bg-indigo-500 transition-colors"
@@ -38,6 +49,12 @@ export default function Home() {
         >
           Sign in
         </Link>
+        <button
+          onClick={handleSignOut}
+          className="rounded-lg border border-slate-600 px-6 py-3 font-semibold hover:bg-slate-800 transition-colors"
+        >
+          Sign out
+        </button>
       </div>
       <p className="text-slate-500 text-sm">
         New here?{' '}

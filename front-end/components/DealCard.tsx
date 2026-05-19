@@ -41,20 +41,13 @@ export default function DealCard({ domain, estValue, score }: Props) {
   }
 
   async function listForSale() {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      setError('__login__')
-      return
-    }
     setListing(true)
     setError('')
     try {
       const res = await fetch(`${API}/domains/${domain}/list`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ price: parseFloat(listPrice) }),
       })
       if (res.status === 401) { setError('__login__'); return }

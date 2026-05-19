@@ -16,14 +16,8 @@ type SnipeTarget = {
   created_at: string
 }
 
-function getToken() {
-  if (typeof window === 'undefined') return ''
-  return localStorage.getItem('token') ?? ''
-}
-
 function fetcher(url: string) {
-  const token = getToken()
-  return fetch(url, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json())
+  return fetch(url, { credentials: 'include' }).then(r => r.json())
 }
 
 function relativeTime(iso: string | null) {
@@ -54,7 +48,9 @@ export default function SnipePage() {
   const [triggered, setTriggered] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
-    if (!localStorage.getItem('token')) router.push('/login')
+    fetch(`${API}/auth/me`, { credentials: 'include' }).then(r => {
+      if (r.status === 401) router.push('/login')
+    }).catch(() => router.push('/login'))
   }, [router])
 
   const { data: targets, isLoading, mutate } = useSWR<SnipeTarget[]>(
@@ -66,10 +62,10 @@ export default function SnipePage() {
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
     setFormError('')
-    const token = getToken()
     const res = await fetch(`${API}/snipe`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ domain: domain.trim(), max_bid: parseFloat(maxBid) }),
     })
     if (res.status === 409 || res.status === 400) {
@@ -87,19 +83,17 @@ export default function SnipePage() {
   }
 
   async function handleRemove(d: string) {
-    const token = getToken()
     await fetch(`${API}/snipe/${encodeURIComponent(d)}`, {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include',
     })
     mutate()
   }
 
   async function handleTrigger(d: string) {
-    const token = getToken()
     await fetch(`${API}/snipe/${encodeURIComponent(d)}/trigger`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include',
     })
     setTriggered(prev => ({ ...prev, [d]: true }))
     setTimeout(() => setTriggered(prev => ({ ...prev, [d]: false })), 3000)

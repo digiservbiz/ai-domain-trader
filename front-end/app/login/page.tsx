@@ -19,6 +19,7 @@ export default function LoginPage() {
       const res = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        credentials: 'include',
         body: new URLSearchParams({ username: email, password }),
       })
       if (!res.ok) {
@@ -26,8 +27,7 @@ export default function LoginPage() {
         setError(data.detail ?? 'Login failed')
         return
       }
-      const { access_token } = await res.json()
-      localStorage.setItem('token', access_token)
+      await res.json()
       router.push('/deals')
     } catch {
       setError('Could not reach the server')
