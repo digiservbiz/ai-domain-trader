@@ -23,4 +23,8 @@ celery.conf.beat_schedule = {
         "task": "app.tasks.scrapers.scrape_reddit_trends",
         "schedule": crontab(minute=30, hour="*/3"),
     },
+    "run-auction-sniper": {
+        "task": "app.tasks.auction.run_sniper",
+        "schedule": crontab(minute="*/30"),
+    },
 }

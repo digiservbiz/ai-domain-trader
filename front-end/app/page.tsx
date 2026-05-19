@@ -27,6 +27,12 @@ export default function Home() {
           Portfolio
         </Link>
         <Link
+          href="/snipe"
+          className="rounded-lg bg-slate-700 px-6 py-3 font-semibold hover:bg-slate-600 transition-colors"
+        >
+          Sniper
+        </Link>
+        <Link
           href="/login"
           className="rounded-lg border border-slate-600 px-6 py-3 font-semibold hover:bg-slate-800 transition-colors"
         >

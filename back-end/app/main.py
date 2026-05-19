@@ -5,6 +5,7 @@ from app.api.routes import router
 from app.api.ws import router as ws_router
 from app.api.auth import router as auth_router
 from app.api.portfolio import router as portfolio_router
+from app.api.snipe import router as snipe_router
 
 app = FastAPI(title="AI Domain Trader")
 
@@ -22,6 +23,7 @@ app.include_router(router)
 app.include_router(ws_router)
 app.include_router(auth_router)
 app.include_router(portfolio_router)
+app.include_router(snipe_router)
 
 
 @app.get("/healthz")
