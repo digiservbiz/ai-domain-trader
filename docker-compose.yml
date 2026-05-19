@@ -39,7 +39,7 @@ services:
     environment:
       DATABASE_URL: postgresql://trader:trader@db:5432/domains
       REDIS_URL: redis://redis:6379/0
-    ports: ["8000:8000"]
+    expose: ["8000"]
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -71,7 +71,14 @@ services:
 
   frontend:
     build: ./front-end
-    ports: ["3000:3000"]
+    expose: ["3000"]
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_API_URL: http://localhost/api
     depends_on: [backend]
+
+  nginx:
+    image: nginx:alpine
+    ports: ["80:80"]
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on: [backend, frontend]

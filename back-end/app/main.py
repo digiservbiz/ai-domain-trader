@@ -1,4 +1,8 @@
 import os
+import sentry_sdk
+_sentry_dsn = os.getenv("SENTRY_DSN")
+if _sentry_dsn:
+    sentry_sdk.init(dsn=_sentry_dsn, traces_sample_rate=0.2, environment=os.getenv("ENVIRONMENT", "production"))
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler

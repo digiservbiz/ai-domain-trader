@@ -12,4 +12,5 @@ class Settings:
     MOZ_SECRET_KEY     = os.getenv("MOZ_SECRET_KEY")
     SECRET_KEY                 = os.environ["SECRET_KEY"]
     ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
+    SENTRY_DSN = os.getenv("SENTRY_DSN")
 settings = Settings()
