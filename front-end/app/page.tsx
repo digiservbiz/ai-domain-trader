@@ -21,6 +21,12 @@ export default function Home() {
           Search Domains
         </Link>
         <Link
+          href="/portfolio"
+          className="rounded-lg bg-slate-700 px-6 py-3 font-semibold hover:bg-slate-600 transition-colors"
+        >
+          Portfolio
+        </Link>
+        <Link
           href="/login"
           className="rounded-lg border border-slate-600 px-6 py-3 font-semibold hover:bg-slate-800 transition-colors"
         >
