@@ -1,3 +1,4 @@
+import os
 import requests
 from fastapi import HTTPException
 from app.config import settings
@@ -8,7 +9,8 @@ class GoDaddyMarketplace(Marketplace):
     def __init__(self):
         if not settings.GODADDY_KEY or not settings.GODADDY_SECRET:
             raise HTTPException(503, "GoDaddy credentials not configured")
-        self.base_url = "https://api.godaddy.com"
+        sandbox = os.getenv("GODADDY_SANDBOX", "false").lower() == "true"
+        self.base_url = "https://api.ote-godaddy.com" if sandbox else "https://api.godaddy.com"
         self.headers = {
             "Authorization": f"sso-key {settings.GODADDY_KEY}:{settings.GODADDY_SECRET}",
             "Content-Type": "application/json",
