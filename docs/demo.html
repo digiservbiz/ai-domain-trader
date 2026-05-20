@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Domain Trader — Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { brand: '#6366f1' }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: ui-sans-serif, system-ui, sans-serif; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .nav-link.active { background: #1e293b; color: #fff; }
+    .score-bar { transition: width 0.6s ease; }
+    input:focus, select:focus { outline: none; box-shadow: 0 0 0 2px #6366f1; }
+    .badge { display: inline-flex; align-items: center; border-radius: 9999px; padding: 2px 10px; font-size: 12px; font-weight: 500; }
+    .fade-in { animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .toast { position: fixed; bottom: 24px; right: 24px; z-index: 999; transition: all 0.3s; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen">
+
+<!-- ── NAVBAR ── -->
+<header class="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-slate-800">
+  <div class="max-w-6xl mx-auto px-4 h-14 flex items-center gap-6">
+    <button onclick="navigate('home')" class="font-bold text-white tracking-tight shrink-0 hover:text-indigo-400 transition-colors">
+      AI Domain Trader
+    </button>
+    <nav class="flex items-center gap-1 flex-1 overflow-x-auto">
+      <button onclick="navigate('deals')"     class="nav-link px-3 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors whitespace-nowrap" data-page="deals">Live Deals</button>
+      <button onclick="navigate('search')"    class="nav-link px-3 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors whitespace-nowrap" data-page="search">Search</button>
+      <button onclick="navigate('portfolio')" class="nav-link px-3 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors whitespace-nowrap" data-page="portfolio">Portfolio</button>
+      <button onclick="navigate('snipe')"     class="nav-link px-3 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors whitespace-nowrap" data-page="snipe">Sniper</button>
+    </nav>
+    <div class="shrink-0" id="nav-auth">
+      <button onclick="navigate('login')" class="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-semibold hover:bg-indigo-500 transition-colors">Sign in</button>
+    </div>
+  </div>
+</header>
+
+<!-- ── DEMO BANNER ── -->
+<div class="bg-indigo-900/40 border-b border-indigo-800/50 text-center py-2 text-xs text-indigo-300">
+  ✦ Interactive Demo — all data is mocked, no backend required ✦
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: HOME
+════════════════════════════════════════ -->
+<div id="page-home" class="page active fade-in">
+  <main class="flex flex-col items-center justify-center min-h-[calc(100vh-7rem)] gap-6 p-8 text-center">
+    <div class="inline-flex items-center gap-2 bg-indigo-900/40 border border-indigo-700/50 rounded-full px-4 py-1.5 text-sm text-indigo-300 mb-2">
+      <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+      AI-powered domain intelligence
+    </div>
+    <h1 class="text-5xl md:text-6xl font-bold tracking-tight">AI Domain Trader</h1>
+    <p class="text-slate-400 max-w-lg text-lg">
+      Discover undervalued domains with AI-powered trend analysis, XGBoost valuation, and automated auction sniping.
+    </p>
+    <div class="flex gap-3 flex-wrap justify-center mt-2">
+      <button onclick="navigate('deals')" class="rounded-lg bg-indigo-600 px-6 py-3 font-semibold hover:bg-indigo-500 transition-colors">
+        Browse Live Deals
+      </button>
+      <button onclick="navigate('search')" class="rounded-lg bg-slate-700 px-6 py-3 font-semibold hover:bg-slate-600 transition-colors">
+        Search Domains
+      </button>
+    </div>
+    <div class="grid grid-cols-3 gap-6 mt-8 max-w-lg w-full">
+      <div class="bg-slate-800 rounded-xl p-4 text-center">
+        <p class="text-2xl font-bold text-indigo-400">XGBoost</p>
+        <p class="text-xs text-slate-400 mt-1">ML Valuation</p>
+      </div>
+      <div class="bg-slate-800 rounded-xl p-4 text-center">
+        <p class="text-2xl font-bold text-indigo-400">Real-time</p>
+        <p class="text-xs text-slate-400 mt-1">WebSocket Deals</p>
+      </div>
+      <div class="bg-slate-800 rounded-xl p-4 text-center">
+        <p class="text-2xl font-bold text-indigo-400">Auto</p>
+        <p class="text-xs text-slate-400 mt-1">Auction Sniper</p>
+      </div>
+    </div>
+    <p class="text-slate-500 text-sm mt-4">
+      New here? <button onclick="navigate('register')" class="text-indigo-400 hover:text-indigo-300">Create a free account</button>
+    </p>
+  </main>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: LIVE DEALS
+════════════════════════════════════════ -->
+<div id="page-deals" class="page fade-in">
+  <div class="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-bold">Live Domain Deals</h1>
+      <span class="flex items-center gap-1.5 text-xs text-green-400 bg-green-900/30 border border-green-800/50 rounded-full px-3 py-1">
+        <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
+        Live via WebSocket
+      </span>
+    </div>
+    <div id="deals-grid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: SEARCH
+════════════════════════════════════════ -->
+<div id="page-search" class="page fade-in">
+  <div class="sticky top-14 z-10 bg-slate-900/95 backdrop-blur border-b border-slate-800 px-4 py-3">
+    <div class="max-w-6xl mx-auto flex flex-wrap gap-3 items-end">
+      <div class="flex-1 min-w-[180px]">
+        <label class="block text-xs text-slate-400 mb-1">Search domains</label>
+        <input id="search-q" type="text" placeholder="e.g. neural, crypto, shop…"
+          class="w-full rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-sm"
+          oninput="filterSearch()" />
+      </div>
+      <div class="min-w-[120px]">
+        <label class="block text-xs text-slate-400 mb-1">TLD</label>
+        <select id="search-tld" class="w-full rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-sm" onchange="filterSearch()">
+          <option value="">All TLDs</option>
+          <option value=".com">.com</option>
+          <option value=".io">.io</option>
+          <option value=".ai">.ai</option>
+          <option value=".co">.co</option>
+          <option value=".net">.net</option>
+          <option value=".org">.org</option>
+        </select>
+      </div>
+      <div class="min-w-[100px]">
+        <label class="block text-xs text-slate-400 mb-1">Min score</label>
+        <input id="search-score" type="number" min="0" max="100" placeholder="0"
+          class="w-full rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-sm"
+          oninput="filterSearch()" />
+      </div>
+      <div class="min-w-[120px]">
+        <label class="block text-xs text-slate-400 mb-1">Max value $</label>
+        <input id="search-maxval" type="number" min="0" placeholder="Any"
+          class="w-full rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-sm"
+          oninput="filterSearch()" />
+      </div>
+    </div>
+  </div>
+  <div class="max-w-6xl mx-auto px-4 py-6">
+    <p id="search-count" class="text-slate-400 text-sm mb-4"></p>
+    <div id="search-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    <p id="search-empty" class="text-slate-400 text-center py-12 hidden">No domains match your filters.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: PORTFOLIO
+════════════════════════════════════════ -->
+<div id="page-portfolio" class="page fade-in">
+  <div class="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <h1 class="text-2xl font-bold">My Portfolio</h1>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="bg-slate-800 rounded-lg p-4">
+        <p class="text-slate-400 text-sm mb-1">Total Invested</p>
+        <p class="text-xl font-semibold" id="p-invested">$0.00</p>
+      </div>
+      <div class="bg-slate-800 rounded-lg p-4">
+        <p class="text-slate-400 text-sm mb-1">Current Value</p>
+        <p class="text-xl font-semibold" id="p-value">$0.00</p>
+      </div>
+      <div class="bg-slate-800 rounded-lg p-4">
+        <p class="text-slate-400 text-sm mb-1">Total P&amp;L</p>
+        <p class="text-xl font-semibold" id="p-pnl">+$0.00 (0.0%)</p>
+      </div>
+    </div>
+
+    <form onsubmit="addPortfolio(event)" class="flex flex-wrap gap-3 items-start">
+      <input id="p-domain" type="text" placeholder="myniche.com"
+        class="flex-1 min-w-[180px] rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-sm" />
+      <input id="p-price" type="number" placeholder="Bought price ($)" min="0" step="0.01"
+        class="w-44 rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-sm" />
+      <button type="submit"
+        class="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold hover:bg-indigo-500 transition-colors">
+        Add to portfolio
+      </button>
+      <p id="p-error" class="w-full text-sm text-red-400 hidden"></p>
+    </form>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm border-collapse">
+        <thead>
+          <tr class="text-slate-400 border-b border-slate-700">
+            <th class="text-left py-2 pr-4">Domain</th>
+            <th class="text-right py-2 pr-4">Bought</th>
+            <th class="text-right py-2 pr-4">Current Value</th>
+            <th class="text-right py-2 pr-4">P&amp;L</th>
+            <th class="text-right py-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="portfolio-tbody">
+          <!-- rows injected by JS -->
+        </tbody>
+      </table>
+      <p id="portfolio-empty" class="text-slate-400 text-sm py-4">No domains yet. Add one above.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: SNIPER
+════════════════════════════════════════ -->
+<div id="page-snipe" class="page fade-in">
+  <main class="max-w-6xl mx-auto p-8 space-y-8">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">Auction Sniper</h1>
+      <p class="text-slate-400 mt-1">Automatically bid on GoDaddy auctions when price drops below your max.</p>
+    </div>
+
+    <form onsubmit="addSnipe(event)" class="flex flex-wrap gap-3 items-end">
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-slate-400" for="snipe-domain">Domain</label>
+        <input id="snipe-domain" type="text" placeholder="domain.com" required
+          class="rounded-lg bg-slate-800 border border-slate-700 px-4 py-2.5 text-sm w-56" />
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-slate-400" for="snipe-bid">Max bid ($)</label>
+        <input id="snipe-bid" type="number" placeholder="500" required min="1" step="0.01"
+          class="rounded-lg bg-slate-800 border border-slate-700 px-4 py-2.5 text-sm w-36" />
+      </div>
+      <button type="submit"
+        class="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold hover:bg-indigo-500 transition-colors">
+        Watch domain
+      </button>
+      <p id="snipe-error" class="w-full text-sm text-red-400 hidden"></p>
+    </form>
+
+    <div id="snipe-empty" class="text-slate-400">No snipe targets yet. Add a domain above to start watching.</div>
+    <div class="overflow-x-auto rounded-xl border border-slate-700 hidden" id="snipe-table-wrap">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-slate-700 text-slate-400 text-left">
+            <th class="px-4 py-3 font-medium">Domain</th>
+            <th class="px-4 py-3 font-medium">Max Bid</th>
+            <th class="px-4 py-3 font-medium">Current Bid</th>
+            <th class="px-4 py-3 font-medium">Status</th>
+            <th class="px-4 py-3 font-medium">Last Checked</th>
+            <th class="px-4 py-3 font-medium">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="snipe-tbody"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: LOGIN
+════════════════════════════════════════ -->
+<div id="page-login" class="page fade-in">
+  <main class="flex min-h-[calc(100vh-7rem)] items-center justify-center p-8">
+    <div class="w-full max-w-sm space-y-6">
+      <div class="text-center">
+        <h1 class="text-3xl font-bold">Sign in</h1>
+        <p class="mt-1 text-slate-400 text-sm">to AI Domain Trader</p>
+      </div>
+      <form onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1" for="login-email">Email</label>
+          <input id="login-email" type="email" required placeholder="you@example.com"
+            class="w-full rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1" for="login-pass">Password</label>
+          <input id="login-pass" type="password" required
+            class="w-full rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-sm" />
+        </div>
+        <p id="login-error" class="text-red-400 text-sm hidden"></p>
+        <p class="text-xs text-slate-500 bg-slate-800 rounded-lg px-3 py-2">
+          Demo tip: use <span class="text-indigo-400">demo@example.com</span> / <span class="text-indigo-400">password123</span>
+        </p>
+        <button type="submit" id="login-btn"
+          class="w-full rounded-lg bg-indigo-600 px-4 py-2 font-semibold hover:bg-indigo-500 transition-colors">
+          Sign in
+        </button>
+      </form>
+      <p class="text-center text-sm text-slate-400">
+        No account? <button onclick="navigate('register')" class="text-indigo-400 hover:text-indigo-300">Register</button>
+      </p>
+    </div>
+  </main>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: REGISTER
+════════════════════════════════════════ -->
+<div id="page-register" class="page fade-in">
+  <main class="flex min-h-[calc(100vh-7rem)] items-center justify-center p-8">
+    <div class="w-full max-w-sm space-y-6">
+      <div class="text-center">
+        <h1 class="text-3xl font-bold">Create account</h1>
+        <p class="mt-1 text-slate-400 text-sm">AI Domain Trader</p>
+      </div>
+      <form onsubmit="handleRegister(event)" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1" for="reg-email">Email</label>
+          <input id="reg-email" type="email" required placeholder="you@example.com"
+            class="w-full rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1" for="reg-pass">Password</label>
+          <input id="reg-pass" type="password" required minlength="8"
+            class="w-full rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-sm" />
+          <p class="mt-1 text-xs text-slate-500">Minimum 8 characters</p>
+        </div>
+        <p id="reg-error" class="text-red-400 text-sm hidden"></p>
+        <button type="submit"
+          class="w-full rounded-lg bg-indigo-600 px-4 py-2 font-semibold hover:bg-indigo-500 transition-colors">
+          Create account
+        </button>
+      </form>
+      <p class="text-center text-sm text-slate-400">
+        Already have an account? <button onclick="navigate('login')" class="text-indigo-400 hover:text-indigo-300">Sign in</button>
+      </p>
+    </div>
+  </main>
+</div>
+
+<!-- ── TOAST ── -->
+<div id="toast" class="toast hidden">
+  <div class="bg-slate-800 border border-slate-700 rounded-xl px-5 py-3 text-sm shadow-xl flex items-center gap-3">
+    <span id="toast-icon">✓</span>
+    <span id="toast-msg"></span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     MOCK DATA + APP LOGIC
+════════════════════════════════════════ -->
+<script>
+// ── Mock Data ──────────────────────────────────────────────────────────────
+
+const DEALS = [
+  { domain: 'neuralvault.ai',    score: 91, estValue: 18400 },
+  { domain: 'promptforge.io',    score: 87, estValue: 12200 },
+  { domain: 'chainledge.com',    score: 84, estValue: 31000 },
+  { domain: 'pixelshift.co',     score: 79, estValue:  8750 },
+  { domain: 'agenthive.ai',      score: 95, estValue: 52000 },
+  { domain: 'mintdrop.io',       score: 73, estValue:  6300 },
+  { domain: 'quantedge.com',     score: 88, estValue: 27500 },
+  { domain: 'seedvault.org',     score: 66, estValue:  4100 },
+  { domain: 'smartlayer.net',    score: 71, estValue:  5900 },
+  { domain: 'dataflux.ai',       score: 93, estValue: 44000 },
+  { domain: 'stackbloom.io',     score: 68, estValue:  3800 },
+  { domain: 'vaultmesh.com',     score: 82, estValue: 19600 },
+];
+
+const SEARCH_DOMAINS = [
+  ...DEALS,
+  { domain: 'cryptostack.com',   score: 77, estValue: 14200 },
+  { domain: 'aibroker.io',       score: 90, estValue: 38000 },
+  { domain: 'neurotrade.ai',     score: 86, estValue: 29000 },
+  { domain: 'tokenshift.co',     score: 62, estValue:  3200 },
+  { domain: 'shopnexus.com',     score: 74, estValue:  9800 },
+  { domain: 'cloudpivot.net',    score: 58, estValue:  2100 },
+  { domain: 'logicvault.io',     score: 81, estValue: 16500 },
+  { domain: 'payvault.com',      score: 85, estValue: 23400 },
+  { domain: 'defigate.org',      score: 70, estValue:  5500 },
+  { domain: 'edgenode.ai',       score: 89, estValue: 35000 },
+  { domain: 'infrastack.io',     score: 64, estValue:  4600 },
+  { domain: 'brandnest.com',     score: 76, estValue: 11300 },
+];
+
+let portfolioItems = [
+  { domain: 'neuralvault.ai', bought: 4200,  current: 18400 },
+  { domain: 'chainledge.com', bought: 9800,  current: 31000 },
+  { domain: 'pixelshift.co',  bought: 3100,  current:  8750 },
+];
+
+let snipeTargets = [
+  { domain: 'quantedge.com',  maxBid: 5000, currentBid: 3200, status: 'watching',   checked: '3m ago' },
+  { domain: 'agenthive.ai',   maxBid: 8000, currentBid: 7100, status: 'bid_placed', checked: '12m ago' },
+  { domain: 'dataflux.ai',    maxBid: 12000,currentBid: null,  status: 'watching',   checked: '30m ago' },
+];
+
+let isLoggedIn = false;
+let currentUser = null;
+
+// ── Navigation ─────────────────────────────────────────────────────────────
+
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+
+  const el = document.getElementById('page-' + page);
+  if (el) { el.classList.add('active'); el.classList.remove('fade-in'); void el.offsetWidth; el.classList.add('fade-in'); }
+
+  const link = document.querySelector(`.nav-link[data-page="${page}"]`);
+  if (link) link.classList.add('active');
+
+  if (page === 'deals')     renderDeals();
+  if (page === 'search')    renderSearch();
+  if (page === 'portfolio') renderPortfolio();
+  if (page === 'snipe' && !isLoggedIn) { showToast('Sign in to use the Auction Sniper', '🔒'); navigate('login'); return; }
+  if (page === 'portfolio' && !isLoggedIn) { showToast('Sign in to view your portfolio', '🔒'); navigate('login'); return; }
+
+  window.scrollTo(0, 0);
+}
+
+// ── Deal Card Builder ───────────────────────────────────────────────────────
+
+function scoreColor(score) {
+  if (score >= 70) return 'bg-green-500';
+  if (score >= 40) return 'bg-yellow-500';
+  return 'bg-red-500';
+}
+
+function buildCard(item) {
+  const sc = scoreColor(item.score);
+  return `
+  <div class="rounded-xl bg-slate-800 border border-slate-700 p-4 space-y-3">
+    <div class="flex items-start justify-between gap-2">
+      <span class="font-mono font-semibold text-white truncate">${item.domain}</span>
+      <span class="text-yellow-400 font-semibold whitespace-nowrap text-sm">$${item.estValue.toLocaleString()}</span>
+    </div>
+    <div class="space-y-1">
+      <div class="flex justify-between text-xs text-slate-400">
+        <span>Trend score</span><span>${item.score}</span>
+      </div>
+      <div class="h-1.5 rounded-full bg-slate-700 overflow-hidden">
+        <div class="h-full rounded-full ${sc} score-bar" style="width:${item.score}%"></div>
+      </div>
+    </div>
+    <div class="availability-area-${item.domain.replace(/\./g,'-')}">
+      <button onclick="checkAvail('${item.domain}')"
+        class="w-full rounded-lg border border-slate-600 px-3 py-2 text-sm font-medium hover:bg-slate-700 transition-colors">
+        Check availability
+      </button>
+    </div>
+  </div>`;
+}
+
+function renderDeals() {
+  document.getElementById('deals-grid').innerHTML = DEALS.map(buildCard).join('');
+}
+
+// ── Availability mock ──────────────────────────────────────────────────────
+
+function checkAvail(domain) {
+  const key = domain.replace(/\./g, '-');
+  const area = document.querySelector('.availability-area-' + key);
+  if (!area) return;
+  area.innerHTML = `<p class="text-slate-400 text-sm text-center py-1">Checking…</p>`;
+  setTimeout(() => {
+    const avail = Math.random() > 0.4;
+    const regPrice = (Math.random() * 15 + 9).toFixed(2);
+    if (avail) {
+      area.innerHTML = `
+        <div class="flex items-center gap-2 text-sm rounded-lg px-3 py-2 bg-green-900/40 text-green-300">
+          <span>✓ Available</span>
+          <span class="ml-auto text-xs opacity-70">Reg. USD ${regPrice}</span>
+        </div>
+        ${isLoggedIn ? `
+        <div class="flex gap-2 mt-2">
+          <div class="relative flex-1">
+            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+            <input type="number" value="${Math.round(Math.random()*5000+1000)}"
+              class="w-full rounded-lg bg-slate-700 border border-slate-600 pl-6 pr-3 py-2 text-sm" id="list-price-${key}" />
+          </div>
+          <button onclick="listDomain('${domain}')" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold hover:bg-indigo-500 transition-colors whitespace-nowrap">
+            List for sale
+          </button>
+        </div>` : `
+        <p class="text-sm text-slate-400 text-center mt-2">
+          <button onclick="navigate('login')" class="text-indigo-400 hover:text-indigo-300">Sign in</button> to list this domain
+        </p>`}`;
+    } else {
+      area.innerHTML = `
+        <div class="flex items-center gap-2 text-sm rounded-lg px-3 py-2 bg-red-900/40 text-red-300">
+          <span>✗ Already taken</span>
+        </div>`;
+    }
+  }, 900);
+}
+
+function listDomain(domain) {
+  showToast(`Listed ${domain} on GoDaddy!`, '✓');
+  const key = domain.replace(/\./g, '-');
+  const area = document.querySelector('.availability-area-' + key);
+  if (area) area.querySelector('button[onclick*="listDomain"]')?.remove();
+}
+
+// ── Search ─────────────────────────────────────────────────────────────────
+
+function renderSearch() {
+  filterSearch();
+}
+
+function filterSearch() {
+  const q       = (document.getElementById('search-q')?.value || '').toLowerCase();
+  const tld     = document.getElementById('search-tld')?.value || '';
+  const minScore= parseInt(document.getElementById('search-score')?.value || '0') || 0;
+  const maxVal  = parseInt(document.getElementById('search-maxval')?.value || '0') || 0;
+
+  let filtered = SEARCH_DOMAINS.filter(d => {
+    if (q && !d.domain.includes(q)) return false;
+    if (tld && !d.domain.endsWith(tld)) return false;
+    if (minScore && d.score < minScore) return false;
+    if (maxVal && d.estValue > maxVal) return false;
+    return true;
+  });
+
+  const grid  = document.getElementById('search-grid');
+  const empty = document.getElementById('search-empty');
+  const count = document.getElementById('search-count');
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '';
+    empty.classList.remove('hidden');
+    count.textContent = '';
+  } else {
+    empty.classList.add('hidden');
+    count.textContent = `${filtered.length} domain${filtered.length !== 1 ? 's' : ''} found`;
+    grid.innerHTML = filtered.map(buildCard).join('');
+  }
+}
+
+// ── Portfolio ──────────────────────────────────────────────────────────────
+
+function renderPortfolio() {
+  const tbody = document.getElementById('portfolio-tbody');
+  const empty = document.getElementById('portfolio-empty');
+
+  const totalInvested = portfolioItems.reduce((s, i) => s + i.bought, 0);
+  const totalCurrent  = portfolioItems.reduce((s, i) => s + i.current, 0);
+  const totalPnl      = totalCurrent - totalInvested;
+  const pnlPct        = totalInvested > 0 ? (totalPnl / totalInvested) * 100 : 0;
+  const pos           = totalPnl >= 0;
+
+  document.getElementById('p-invested').textContent = '$' + totalInvested.toLocaleString(undefined, {minimumFractionDigits:2,maximumFractionDigits:2});
+  document.getElementById('p-value').textContent    = '$' + totalCurrent.toLocaleString(undefined, {minimumFractionDigits:2,maximumFractionDigits:2});
+  const pnlEl = document.getElementById('p-pnl');
+  pnlEl.textContent = `${pos?'+':'-'}$${Math.abs(totalPnl).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} (${pos?'+':'-'}${Math.abs(pnlPct).toFixed(1)}%)`;
+  pnlEl.className = `text-xl font-semibold ${pos ? 'text-green-400' : 'text-red-400'}`;
+
+  if (portfolioItems.length === 0) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+  tbody.innerHTML = portfolioItems.map((item, idx) => {
+    const pnl    = item.current - item.bought;
+    const pnlPct = item.bought > 0 ? (pnl / item.bought) * 100 : 0;
+    const pos    = pnl >= 0;
+    const color  = pos ? 'text-green-400' : 'text-red-400';
+    const sign   = pos ? '+' : '-';
+    return `
+      <tr class="border-b border-slate-800 hover:bg-slate-800/40">
+        <td class="py-3 pr-4 font-medium font-mono">${item.domain}</td>
+        <td class="py-3 pr-4 text-right text-slate-300">$${item.bought.toLocaleString()}</td>
+        <td class="py-3 pr-4 text-right text-slate-300">$${item.current.toLocaleString()}</td>
+        <td class="py-3 pr-4 text-right ${color}">
+          ${sign}$${Math.abs(pnl).toLocaleString()} (${sign}${Math.abs(pnlPct).toFixed(1)}%)
+        </td>
+        <td class="py-3 text-right">
+          <button onclick="removePortfolio(${idx})"
+            class="text-xs text-red-400 hover:text-red-300 border border-red-900 rounded px-2 py-1 hover:bg-red-950 transition-colors">
+            Remove
+          </button>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function addPortfolio(e) {
+  e.preventDefault();
+  const domain = document.getElementById('p-domain').value.trim();
+  const price  = parseFloat(document.getElementById('p-price').value);
+  const errEl  = document.getElementById('p-error');
+
+  if (!domain || isNaN(price) || price <= 0) {
+    errEl.textContent = 'Please enter a valid domain and price.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  if (portfolioItems.some(i => i.domain === domain)) {
+    errEl.textContent = 'Domain already in portfolio.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  errEl.classList.add('hidden');
+
+  // mock current value: random ±40% around bought price
+  const current = Math.round(price * (0.7 + Math.random() * 0.9));
+  portfolioItems.push({ domain, bought: price, current });
+  document.getElementById('p-domain').value = '';
+  document.getElementById('p-price').value = '';
+  renderPortfolio();
+  showToast(`Added ${domain} to portfolio`, '✓');
+}
+
+function removePortfolio(idx) {
+  const d = portfolioItems[idx].domain;
+  portfolioItems.splice(idx, 1);
+  renderPortfolio();
+  showToast(`Removed ${d}`, '✕');
+}
+
+// ── Sniper ─────────────────────────────────────────────────────────────────
+
+const statusStyles = {
+  watching:   'bg-slate-700 text-slate-300',
+  bid_placed: 'bg-blue-900 text-blue-300',
+  won:        'bg-green-900 text-green-300',
+  lost:       'bg-red-900 text-red-300',
+  outbid:     'bg-red-900 text-red-300',
+  error:      'bg-orange-900 text-orange-300',
+};
+
+function renderSnipe() {
+  const wrap  = document.getElementById('snipe-table-wrap');
+  const empty = document.getElementById('snipe-empty');
+  const tbody = document.getElementById('snipe-tbody');
+
+  if (snipeTargets.length === 0) {
+    wrap.classList.add('hidden');
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+  wrap.classList.remove('hidden');
+
+  tbody.innerHTML = snipeTargets.map((t, idx) => {
+    const cls = statusStyles[t.status] || statusStyles.watching;
+    return `
+      <tr class="border-b border-slate-800 hover:bg-slate-800/50">
+        <td class="px-4 py-3 font-medium font-mono">${t.domain}</td>
+        <td class="px-4 py-3">$${t.maxBid.toLocaleString()}</td>
+        <td class="px-4 py-3">${t.currentBid != null ? '$' + t.currentBid.toLocaleString() : '—'}</td>
+        <td class="px-4 py-3">
+          <span class="badge ${cls}">${t.status.replace('_',' ')}</span>
+        </td>
+        <td class="px-4 py-3 text-slate-400">${t.checked}</td>
+        <td class="px-4 py-3">
+          <div class="flex gap-2">
+            <button onclick="triggerSnipe(${idx})" id="snipe-now-${idx}"
+              class="rounded bg-slate-700 px-3 py-1 text-xs font-medium hover:bg-slate-600 transition-colors">
+              Snipe Now
+            </button>
+            <button onclick="removeSnipe(${idx})"
+              class="rounded bg-red-900/60 px-3 py-1 text-xs font-medium hover:bg-red-800 transition-colors text-red-300">
+              Remove
+            </button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function addSnipe(e) {
+  e.preventDefault();
+  const domain  = document.getElementById('snipe-domain').value.trim();
+  const maxBid  = parseFloat(document.getElementById('snipe-bid').value);
+  const errEl   = document.getElementById('snipe-error');
+
+  if (snipeTargets.some(t => t.domain === domain)) {
+    errEl.textContent = 'Domain is already being watched.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  errEl.classList.add('hidden');
+  snipeTargets.push({ domain, maxBid, currentBid: null, status: 'watching', checked: 'Just now' });
+  document.getElementById('snipe-domain').value = '';
+  document.getElementById('snipe-bid').value = '';
+  renderSnipe();
+  showToast(`Watching ${domain}`, '👁');
+}
+
+function triggerSnipe(idx) {
+  const btn = document.getElementById('snipe-now-' + idx);
+  if (btn) { btn.textContent = 'Triggered!'; btn.disabled = true; }
+  setTimeout(() => {
+    const t = snipeTargets[idx];
+    if (t) {
+      const newBid = Math.round(t.maxBid * (0.5 + Math.random() * 0.4));
+      t.currentBid = newBid;
+      t.status     = newBid < t.maxBid ? 'bid_placed' : 'outbid';
+      t.checked    = 'Just now';
+    }
+    renderSnipe();
+    showToast('Snipe triggered!', '⚡');
+  }, 1500);
+}
+
+function removeSnipe(idx) {
+  const d = snipeTargets[idx].domain;
+  snipeTargets.splice(idx, 1);
+  renderSnipe();
+  showToast(`Removed ${d}`, '✕');
+}
+
+// ── Auth ───────────────────────────────────────────────────────────────────
+
+function handleLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('login-email').value;
+  const pass  = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  const btn   = document.getElementById('login-btn');
+
+  btn.textContent = 'Signing in…';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    btn.textContent = 'Sign in';
+    btn.disabled = false;
+
+    if (email === 'demo@example.com' && pass === 'password123') {
+      isLoggedIn  = true;
+      currentUser = email;
+      document.getElementById('nav-auth').innerHTML = `
+        <button onclick="handleLogout()" class="text-sm text-slate-400 hover:text-white transition-colors">Sign out</button>`;
+      showToast('Welcome back!', '👋');
+      navigate('deals');
+    } else {
+      errEl.textContent = 'Invalid credentials. Try demo@example.com / password123';
+      errEl.classList.remove('hidden');
+    }
+  }, 800);
+}
+
+function handleRegister(e) {
+  e.preventDefault();
+  const email = document.getElementById('reg-email').value;
+  const pass  = document.getElementById('reg-pass').value;
+  const errEl = document.getElementById('reg-error');
+
+  if (pass.length < 8) {
+    errEl.textContent = 'Password must be at least 8 characters.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  errEl.classList.add('hidden');
+
+  isLoggedIn  = true;
+  currentUser = email;
+  document.getElementById('nav-auth').innerHTML = `
+    <button onclick="handleLogout()" class="text-sm text-slate-400 hover:text-white transition-colors">Sign out</button>`;
+  showToast('Account created! Welcome.', '🎉');
+  navigate('deals');
+}
+
+function handleLogout() {
+  isLoggedIn  = false;
+  currentUser = null;
+  document.getElementById('nav-auth').innerHTML = `
+    <button onclick="navigate('login')" class="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-semibold hover:bg-indigo-500 transition-colors">Sign in</button>`;
+  showToast('Signed out', '👋');
+  navigate('home');
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+
+let toastTimer = null;
+function showToast(msg, icon = '✓') {
+  const el = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent  = msg;
+  document.getElementById('toast-icon').textContent = icon;
+  el.classList.remove('hidden');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.add('hidden'), 3000);
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+
+renderDeals();
+renderSnipe();
+</script>
+</body>
+</html>
