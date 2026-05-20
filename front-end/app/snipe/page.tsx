@@ -109,27 +109,31 @@ export default function SnipePage() {
           </p>
         </div>
 
-        <form onSubmit={handleAdd} className="flex flex-wrap gap-3 items-start">
+        <form onSubmit={handleAdd} className="flex flex-wrap gap-3 items-end">
           <div className="flex flex-col gap-1">
+            <label className="text-xs text-slate-400" htmlFor="snipe-domain">Domain</label>
             <input
+              id="snipe-domain"
               type="text"
               value={domain}
               onChange={e => setDomain(e.target.value)}
               placeholder="domain.com"
               required
-              className="rounded-lg bg-slate-800 border border-slate-700 px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 w-56"
+              className="rounded-lg bg-slate-800 border border-slate-700 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-56"
             />
           </div>
           <div className="flex flex-col gap-1">
+            <label className="text-xs text-slate-400" htmlFor="snipe-max-bid">Max bid ($)</label>
             <input
+              id="snipe-max-bid"
               type="number"
               value={maxBid}
               onChange={e => setMaxBid(e.target.value)}
-              placeholder="Max bid ($)"
+              placeholder="500"
               required
               min="1"
               step="0.01"
-              className="rounded-lg bg-slate-800 border border-slate-700 px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 w-36"
+              className="rounded-lg bg-slate-800 border border-slate-700 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-36"
             />
           </div>
           <button

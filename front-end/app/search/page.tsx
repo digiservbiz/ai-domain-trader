@@ -63,7 +63,7 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-white">
-      <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur border-b border-slate-800 px-4 py-3">
+      <div className="sticky top-14 z-10 bg-slate-900/95 backdrop-blur border-b border-slate-800 px-4 py-3">
         <div className="max-w-6xl mx-auto flex flex-wrap gap-3 items-end">
           <div className="flex-1 min-w-[180px]">
             <label className="block text-xs text-slate-400 mb-1">Search domains</label>

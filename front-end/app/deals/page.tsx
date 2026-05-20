@@ -1,7 +1,6 @@
 'use client'
 import useSWRSubscription from 'swr/subscription'
 import DealCard from '@/components/DealCard'
-import Link from 'next/link'
 
 interface Deal {
   domain: string
@@ -23,19 +22,14 @@ export default function LiveDeals() {
     }
   )
 
-  if (error) return <p className="p-4 text-red-400">Failed to connect: {error.message}</p>
-  if (!data) return <p className="p-4 text-slate-400">Connecting to live deals…</p>
-  if (data.length === 0) return <p className="p-4 text-slate-400">No deals available yet.</p>
+  if (error) return <p className="max-w-6xl mx-auto px-4 py-12 text-red-400">Failed to connect: {error.message}</p>
+  if (!data) return <p className="max-w-6xl mx-auto px-4 py-12 text-slate-400">Connecting to live deals…</p>
+  if (data.length === 0) return <p className="max-w-6xl mx-auto px-4 py-12 text-slate-400">No deals available yet.</p>
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Live Domain Deals</h1>
-        <Link href="/login" className="text-sm text-indigo-400 hover:text-indigo-300">
-          Sign in to list domains →
-        </Link>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
+    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+      <h1 className="text-2xl font-bold">Live Domain Deals</h1>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {data.map((d: Deal) => (
           <DealCard key={d.domain} domain={d.domain} score={d.score} estValue={d.estValue} />
         ))}
