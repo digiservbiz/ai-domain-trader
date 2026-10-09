@@ -13,9 +13,9 @@ Roadmap: ROADMAP.md
 | Roadmap and project tracking | 100% | Roadmap and status tracker committed |
 | Repository audit | ~88% | Runtime, migration, and deployment validation remain open |
 | Existing foundation usefulness | ~49% | Engineering estimate, not a test result |
-| Autonomous investment intelligence | ~36% | Policy, paper ledger, lifecycle scenario, audit hashing, and audit persistence API now exist; learning/orchestration remain incomplete |
-| Production readiness | ~32% | Tenant-scoping and audit persistence changes are committed; latest head still needs CI and migration verification |
-| Overall target-product completion | ~26% | Engineering estimate; not verified end-to-end or release readiness |
+| Autonomous investment intelligence | ~36% | Policy, paper ledger, lifecycle scenario, audit hashing, and audit persistence API exist; learning/orchestration remain incomplete |
+| Production readiness | ~32% | Tenant-scoping and audit persistence committed; latest head needs CI and migration verification |
+| Overall target-product completion | ~26% | Estimate only; not verified end-to-end or release readiness |
 
 **Current phase:** Phase 1 — Safety foundation and auditable decisions  
 **Trading mode:** Paper trading only  
@@ -25,41 +25,41 @@ Roadmap: ROADMAP.md
 
 Percentages are engineering estimates, not test results. A commit is not considered verified until CI or a documented local check passes.
 
-## Verified checks and current verification state
+## Verification state
 
-- CI run #78 (run ID `37971601098`) completed successfully on an earlier commit. This does not validate the audit-persistence changes added afterward.
-- The last previously documented failing run (`37971419652`) had Ruff pass and pytest report 48 passed / 1 failed. The remaining test invocation was corrected afterward; that older run must not be treated as the latest result.
-- The current PR head includes audit persistence model, migration, API endpoints, and an initial database isolation test. No CI status was returned for current head `0c30ba06f8e7428ced625a283f0040e1cd42dba9` at the time of this update; run current CI before claiming the latest code passes.
-- SQLite/production-dialect execution of migrations `0005` and `0006` is not yet verified.
+- CI run #78 (ID `37971601098`) completed successfully on an earlier commit. It does not verify the newer audit-persistence changes.
+- Earlier run `37971419652`: Ruff passed; pytest reported 48 passed / 1 failed. The remaining paper-mode test invocation was subsequently corrected.
+- Current latest commit: `39301bf629fab8b5a9a88c26f8ca25aa2de7b9a9`. The connector returned no CI run or combined status for this head, so current-head tests are unverified.
+- Alembic migrations `0005` and `0006` have not yet been executed against SQLite and the intended production database dialect.
 
 ## Implemented
 
-- Deterministic candidate policy and simulated paper ledger with acquisition, renewals, sale, fees, limits, and reconciliation.
+- Deterministic candidate policy and paper ledger with acquisition, renewals, sale, fees, exposure limits, and reconciliation.
 - Candidate-to-exit paper scenario runner and regression tests.
-- SHA-256 decision audit snapshots with normalized domain, inputs, financials, policy, reasons, and evidence provenance.
+- SHA-256 decision snapshots with normalized domain, financials, policy, reasons, and evidence provenance.
 - Persistent `decision_audits` model and Alembic migration `0006_persist_decision_audits`.
-- Authenticated `/decision-audits` endpoints to create, list, and retrieve records. Reads and idempotency checks are scoped to the authenticated user; the same content hash may exist in different accounts.
+- Authenticated `POST /decision-audits`, `GET /decision-audits`, and `GET /decision-audits/{audit_id}` endpoints.
+- SQLite-backed model persistence test and endpoint-level tests for persistence, idempotency, list/retrieve, same-content hashes across users, and private-record isolation.
 - Portfolio and snipe-target ownership fields, user-scoped CRUD/trigger routes, conservative legacy migration, and worker lookup by persisted target ID.
-- Paper mode fails closed before marketplace bidding; live actions remain unauthorized.
+- Paper mode fails closed before marketplace bidding; real-world actions remain unauthorized.
 
 ## Current blockers and known risks
 
-1. Verify CI on the current branch head and fix failures from actual logs.
-2. Run the full Alembic chain against SQLite and validate behavior against the intended production database dialect. Migration `0005` intentionally aborts if legacy records have ambiguous ownership.
-3. Expand endpoint-level tests for audit creation, idempotency, listing, retrieval, invalid payloads, and cross-user isolation.
-4. Connect discovery, SEO/trend signals, valuation, policy, paper scenario, and persisted audit into one reproducible pipeline.
-5. Build learning from historical domain sales; avoid treating asking prices or unverified marketplace estimates as completed-sale evidence.
-6. Harden deployment: Docker Compose has known concerns around hardcoded database credentials and exposed database/Redis ports; Nginx is HTTP-only; cookie secure settings need review.
-7. Review third-party scraping/marketplace adapter terms, reliability, provenance, and rate limits before production use.
+1. Verify CI on current head and fix failures based on actual logs.
+2. Execute full Alembic upgrade/downgrade chain against SQLite and validate the production dialect. Migration `0005` intentionally aborts if legacy record ownership is ambiguous.
+3. Connect discovery, SEO/trend signals, valuation, policy, paper scenario, and persisted audit into a reproducible pipeline.
+4. Build historical-sales ingestion and evaluation; distinguish completed-sale evidence from asking prices and estimates.
+5. Harden deployment: Docker Compose has known hardcoded database credentials and exposed database/Redis ports; Nginx is HTTP-only; cookie secure settings need review.
+6. Review scraper and marketplace adapter terms, reliability, provenance, and rate limits.
 
 ## Immediate next actions
 
 1. Check the newest CI run for the current PR head and inspect failures.
-2. Add route-level persistence and tenant-isolation tests.
-3. Validate migration upgrade/downgrade paths with a disposable test database.
-4. Implement the deterministic discovery → evidence → valuation → paper decision → audit pipeline.
-5. Add historical-sales ingestion and a learning/evaluation dataset with provenance and quality checks.
-6. Keep real purchases, bids, paid listings, and email sending disabled until all safety gates pass and explicit authorization is provided.
+2. Validate migration upgrade/downgrade with disposable databases.
+3. Implement the deterministic discovery → evidence → valuation → paper decision → audit pipeline.
+4. Add historical-sales learning with provenance and quality checks.
+5. Harden VPS deployment and security configuration.
+6. Keep real purchases, bids, paid listings, and email sending disabled until safety gates pass and explicit authorization is provided.
 
 ## Acceptance gates before a first usable paper-trading test
 
@@ -70,43 +70,34 @@ Percentages are engineering estimates, not test results. A commit is not conside
 - [ ] Every recommendation stores evidence, assumptions, costs, confidence, and reasons.
 - [ ] A simulated discovery-to-exit scenario can be replayed and audited.
 - [ ] Cash, positions, renewals, fees, and profit/loss reconcile.
-- [x] Portfolio and auction/watch records have owner fields and scoped API queries (full runtime verification still outstanding).
-- [x] Decision-audit persistence model, migration, and tenant-scoped API endpoints added (current CI/migration verification outstanding).
-- [ ] Dashboard clearly distinguishes simulated results from verified real-world outcomes.
+- [x] Portfolio and auction/watch records have owner fields and scoped API queries (full runtime verification outstanding).
+- [x] Decision-audit model, migration, and tenant-scoped API endpoints added (current CI/migration verification outstanding).
+- [ ] Dashboard distinguishes simulated results from verified real-world outcomes.
 - [ ] Production secrets and exposed services are hardened.
 
 ## Progress log
 
 ### 2026-10-09 — Persistent decision audit history
-- Added `DecisionAudit` SQLAlchemy model and migration `0006_persist_decision_audits.py`, linked after `0005_scope_user_records`.
-- Added authenticated `POST /decision-audits`, `GET /decision-audits`, and `GET /decision-audits/{audit_id}` endpoints.
-- Stored canonical decision snapshot JSON and SHA-256 audit ID; repeated submissions by the same user are idempotent.
-- Scoped history queries and uniqueness to the account; identical content hashes can be stored independently by different users.
-- Added a SQLite-backed persistence and ownership test. Endpoint-level tests and current-head CI are still required.
-- Registered the audit model with Alembic metadata and the API router with FastAPI.
-- Current latest known PR head at update time: `0c30ba06f8e7428ced625a283f0040e1cd42dba9`; no current-head CI status was returned by the connector.
+- Added `DecisionAudit` model and migration `0006_persist_decision_audits.py`.
+- Added authenticated create/list/retrieve endpoints; stores canonical snapshot JSON and SHA-256 audit ID.
+- Same user's repeated submissions are idempotent. Same content hashes can exist independently in different accounts; list/get queries are tenant-scoped.
+- Added SQLite-backed persistence test and endpoint-level tests for idempotency, list/retrieve, cross-account duplicate hashes, and hiding private records.
+- Registered model with Alembic metadata and router with FastAPI.
+- Latest code commit: `39301bf629fab8b5a9a88c26f8ca25aa2de7b9a9`. No CI status was returned for this head at update time.
 
 ### 2026-10-09 — CI follow-up and deterministic audit snapshots
-- Run `37971298543`: Ruff and dependency installation passed; pytest reported 44 passed and 2 failed due to a Celery task invocation passing the target ID twice.
-- Run `37971419652`: Ruff passed; pytest reported 48 passed and 1 failed; corrected the remaining paper-mode invocation afterward.
-- Earlier CI run #78 (ID `37971601098`) passed on an earlier commit, not on the audit-persistence changes.
-- Added deterministic SHA-256 audit snapshots and evidence provenance with tests for stable IDs, evidence-sensitive hashes, and validation.
+- Run `37971298543`: Ruff and dependency installation passed; pytest reported 44 passed and 2 failed because a Celery task test supplied the target ID twice.
+- Run `37971419652`: Ruff passed; pytest reported 48 passed and 1 failed; the remaining paper-mode invocation was corrected afterward.
+- Earlier CI run #78 passed on an earlier commit, not on the audit-persistence changes.
+- Added deterministic SHA-256 audit snapshots and evidence provenance with stability and validation tests.
 
-### 2026-10-09 — End-to-end paper scenario
-- Added a deterministic candidate-to-paper-acquisition-to-renewal-to-sale runner and reconciliation report.
-- Added tests for completed simulated lifecycle, WATCH stop, and invalid inputs. No real domain purchase or buyer contact occurs.
+### 2026-10-09 — Paper scenario and worker safety
+- Added deterministic candidate-to-paper-acquisition-to-renewal-to-sale scenario with reconciliation tests.
+- Auction worker now receives a persisted target ID, reloads its domain and bid cap, and updates only that row. Paper mode exits before database or marketplace actions.
 
-### 2026-10-09 — Background worker ownership fix
-- Auction task accepts a watch-target primary key, reloads persisted domain and bid cap, and updates only that row.
-- Added tests for persisted target lookup and paper-mode exit before database or marketplace calls.
-
-### 2026-10-09 — Tenant-isolation implementation
-- Added `user_id` ownership to portfolio and snipe-target models and a conservative Alembic migration.
-- Scoped portfolio and snipe list/create/delete/trigger operations to the authenticated owner.
-- Added a regression test for same-domain records belonging to different users.
-
-### 2026-10-09 — Paper mode and investment policy
-- Added paper-only default, explicit second live-bidding gate, per-domain bid-cap validation, deterministic BUY_CANDIDATE/WATCH/REJECT decisions, exposure accounting, and a simulated ledger.
+### 2026-10-09 — Tenant isolation and paper policy
+- Added owner IDs and scoped portfolio/snipe routes, plus a conservative legacy migration.
+- Added paper-only defaults, explicit second live-bidding gate, bid cap validation, deterministic BUY_CANDIDATE/WATCH/REJECT policy, exposure accounting, and simulated ledger.
 
 ## Update protocol
 
