@@ -8,7 +8,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision = "0005_scope_user_records"
-down_revision = "0004_create_snipe_targets_table"
+down_revision = "0004"
 branch_labels = None
 depends_on = None
 
