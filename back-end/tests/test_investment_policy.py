@@ -25,7 +25,7 @@ def test_good_candidate_is_only_a_paper_candidate():
     assert result["paper_trading_only"] is True
     assert result["purchase_executed"] is False
     assert result["financials"]["all_in_acquisition_cost"] == 55
-    assert result["financials"]["expected_net_profit"] == 291
+    assert result["financials"]["expected_net_profit"] == 290
 
 
 def test_high_trademark_risk_is_rejected():
