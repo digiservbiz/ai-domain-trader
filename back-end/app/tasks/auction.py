@@ -23,9 +23,13 @@ def _auth_headers():
 
 @celery.task(name="app.tasks.auction.snipe", bind=True, max_retries=3)
 def snipe(self, domain: str, max_bid: float):
+    # Fail closed: no marketplace request or bid in the default paper-trading mode.
+    if not settings.can_place_live_bids:
+        logger.warning("Live bidding disabled; paper mode skipped snipe for %s", domain)
+        return {"skipped": True, "mode": "paper", "reason": "live bidding disabled"}
     if not settings.GODADDY_KEY or not settings.GODADDY_SECRET:
         logger.warning("GODADDY_KEY or GODADDY_SECRET not set; skipping snipe for %s", domain)
-        return
+        return {"skipped": True, "mode": "live", "reason": "GoDaddy credentials missing"}
 
     try:
         resp = requests.get(
@@ -38,12 +42,12 @@ def snipe(self, domain: str, max_bid: float):
         try:
             target = session.query(SnipeTarget).filter_by(domain=domain).first()
 
-            if resp.status_code == 404 or resp.status_code != 200:
+            if resp.status_code != 200:
                 if target:
                     target.status = "error"
                     target.last_checked = datetime.utcnow()
                     session.commit()
-                return
+                return {"skipped": True, "reason": f"auction lookup status {resp.status_code}"}
 
             data = resp.json()
             current_bid = data.get("currentBid") or data.get("minimumNextBid", 0.0)
@@ -54,7 +58,7 @@ def snipe(self, domain: str, max_bid: float):
                     target.current_bid = current_bid
                     target.last_checked = datetime.utcnow()
                     session.commit()
-                return
+                return {"skipped": True, "reason": "current bid reached configured maximum"}
 
             bid_resp = requests.post(
                 f"{_GODADDY_BASE}/v1/aftermarket/auctions/{domain}/bids",
@@ -69,6 +73,7 @@ def snipe(self, domain: str, max_bid: float):
                 target.current_bid = current_bid
                 target.last_checked = datetime.utcnow()
                 session.commit()
+            return {"skipped": False, "mode": "live", "domain": domain, "bid": max_bid}
         finally:
             session.close()
 
@@ -79,6 +84,9 @@ def snipe(self, domain: str, max_bid: float):
 
 @celery.task(name="app.tasks.auction.run_sniper", bind=True, max_retries=3)
 def run_sniper(self):
+    if not settings.can_place_live_bids:
+        logger.warning("Live sniper scheduler disabled in paper mode")
+        return {"triggered": 0, "mode": "paper", "reason": "live bidding disabled"}
     try:
         session = _db_session()
         try:
@@ -93,7 +101,7 @@ def run_sniper(self):
                 count += 1
         finally:
             session.close()
-        return {"triggered": count}
+        return {"triggered": count, "mode": "live"}
     except Exception as exc:
         logger.error("run_sniper failed: %s", exc)
         raise self.retry(exc=exc, countdown=120)
