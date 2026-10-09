@@ -24,7 +24,7 @@ def upgrade() -> None:
         sa.Column("payload_json", sa.Text(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.func.now()),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
-        sa.UniqueConstraint("audit_id", name="uq_decision_audits_audit_id"),
+        sa.UniqueConstraint("user_id", "audit_id", name="uq_decision_audits_user_hash"),
     )
     op.create_index("ix_decision_audits_user_id", "decision_audits", ["user_id"])
     op.create_index("ix_decision_audits_audit_id", "decision_audits", ["audit_id"])
