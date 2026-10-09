@@ -125,3 +125,9 @@ Percentages are engineering estimates, not test results. A commit is not conside
 - Both failures were in `tests/test_decision_audit_api.py`: direct calls to `list_decision_audits()` received FastAPI `Query` objects as defaults, causing SQLAlchemy offset conversion to raise `TypeError`.
 - Fixed the endpoint signature with `Annotated[int, Query(...)]` metadata and plain Python defaults (`limit=20`, `offset=0`); committed as `aba8041981c73e8dfd9b4a4ddbb77b12b4ed1345`.
 - Next: rerun CI on the updated branch, verify the newest Render deployment logs show all migrations through `0006` succeeded, and test `/healthz`. Do not mark production readiness complete until these checks pass.
+
+### 2026-10-09 — Live Render authentication failure diagnosed
+- User tested an Auth endpoint in the deployed API and received HTTP 500. Render logs show Passlib's bcrypt backend initialization failing inside `detect_wrap_bug` with `ValueError: password cannot be longer than 72 bytes`.
+- This is consistent with an incompatible newer bcrypt release being installed alongside Passlib 1.7.4; the traceback alone does not indicate that the user's password itself was too long.
+- Pinned `bcrypt==4.0.1` in `back-end/requirements.txt` to restore compatibility with Passlib 1.7.4. Commit: `30f7251bbf7e499e3706770e335b2fb243f4851f`.
+- Pending verification: CI on this commit; Render redeploy with the pinned dependency; retest the same Auth operation and confirm it no longer returns 500. Do not ask the user to share credentials. Keep paper mode and live-action gates unchanged.
