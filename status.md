@@ -149,3 +149,8 @@ Percentages are engineering estimates, not test results. A commit is not conside
 - Additional live smoke test: user reports `GET /decision-audits/{audit_id}` returned **200 OK** for the audit created through the API, confirming create-then-retrieve works in the deployed test environment. Cross-account tenant-isolation and full migration-chain verification remain separate outstanding checks.
 
 - Tenant-isolation test in progress (2026-10-09): second test account registration returned **201 Created** and its login returned **200 OK**. Next verify that this account cannot retrieve the first account's saved audit ID; expected response is 404. Do not mark cross-account isolation as proven until that negative-access test succeeds.
+
+### 2026-10-09 — Live cross-account audit isolation test passed
+- User logged in as the second test account and requested an audit record created under the first test account; the deployed API returned **404 Not Found**, as expected for a record not owned by the authenticated user.
+- This is positive live evidence for the `GET /decision-audits/{audit_id}` cross-account access check. It validates this endpoint/test case only; broader tenant isolation across all protected endpoints and database migration verification remain outstanding.
+- Next: test cross-account isolation for other user-owned resources (portfolio and snipe targets where test data can safely be created), verify deployed health/migrations, and rerun current-branch CI before updating readiness estimates.
