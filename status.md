@@ -36,12 +36,11 @@ Percentages are engineering estimates, not test results. A commit is not conside
 
 ## Immediate next actions
 
-1. Verify CI for the latest worker-ownership commits.
+1. Verify CI for the latest worker-ownership commits and new worker safety tests.
 2. Fix any test or migration failure from actual CI logs.
-3. Add worker regression tests for same-domain targets owned by different users.
-4. Verify the migration against SQLite and the production database dialect before merging.
-5. Build the deterministic paper-trading discovery-to-exit scenario.
-6. Keep real purchase, bid, listing, and email operations disabled until test, security, and explicit-authorization gates are satisfied.
+3. Verify the migration against SQLite and the production database dialect before merging.
+4. Build the deterministic paper-trading discovery-to-exit scenario.
+5. Keep real purchase, bid, listing, and email operations disabled until test, security, and explicit-authorization gates are satisfied.
 
 ## Acceptance gates before a first usable paper-trading test
 
@@ -59,6 +58,7 @@ Percentages are engineering estimates, not test results. A commit is not conside
 
 ### 2026-10-09 — Background worker ownership fix (CI verification pending)
 - Changed the auction task contract to accept a watch-target primary key instead of a domain string and caller-supplied bid amount.
+- Added `test_auction_worker_safety.py` covering persisted target ID/bid cap usage and proving paper mode exits before database or marketplace calls. These tests are committed but not yet CI-verified.
 - The worker now reloads the persisted target and its bid cap from the database, then updates only that target row; same-domain watches owned by different users cannot collide during status updates.
 - Updated the API trigger and scheduled runner to enqueue target IDs.
 - Confirmed one prior CI run associated with commit `12d0b76cc236025f2f5b615dc3ebb52cf12c60c9` completed successfully; this is not evidence for the newer commits. Latest changes still require CI.
