@@ -113,3 +113,8 @@ Percentages are engineering estimates, not test results. A commit is not conside
 2. Record exact tests/checks and actual results.
 3. Adjust percentages only when evidence supports the change.
 4. Never claim a deployment, integration, test, or background task succeeded unless it was executed and verified.
+
+### 2026-10-09 — Render deployment migration-chain fix
+- First Render build completed, but startup failed during `alembic upgrade head`: migration `0005_scope_user_records` referenced `0004_create_snipe_targets_table`, while the actual migration declares its revision ID as `0004`.
+- Corrected `back-end/alembic/versions/0005_scope_user_records.py` so its `down_revision` points to the actual existing revision ID `0004`.
+- Fix committed to `security/tenant-isolation`; redeployment and full migration execution are still required. Do not treat the deployment as healthy until Render starts the API and `/healthz` succeeds.
