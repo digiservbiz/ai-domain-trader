@@ -57,7 +57,9 @@ def test_snipe_worker_uses_persisted_target_id_and_bid_cap(monkeypatch):
     target = SnipeTarget(id=22, user_id=2, domain="shared.example", max_bid=40, status="watching")
     session = FakeSession(target)
     monkeypatch.setattr(auction, "_db_session", lambda: session)
-    monkeypatch.setattr(auction.settings, "can_place_live_bids", True)
+    # Test the two independent live gates rather than monkeypatching a read-only property.
+    monkeypatch.setattr(auction.settings, "TRADING_MODE", "live")
+    monkeypatch.setattr(auction.settings, "LIVE_TRADING_ENABLED", True)
     monkeypatch.setattr(auction.settings, "GODADDY_KEY", "test-key")
     monkeypatch.setattr(auction.settings, "GODADDY_SECRET", "test-secret")
 
@@ -97,7 +99,8 @@ def test_snipe_worker_does_not_contact_marketplace_in_paper_mode(monkeypatch):
         raise AssertionError("Paper mode must not contact the marketplace")
 
     monkeypatch.setattr(auction, "_db_session", forbidden_session)
-    monkeypatch.setattr(auction.settings, "can_place_live_bids", False)
+    monkeypatch.setattr(auction.settings, "TRADING_MODE", "paper")
+    monkeypatch.setattr(auction.settings, "LIVE_TRADING_ENABLED", False)
     monkeypatch.setattr(auction.requests, "get", forbidden_request)
     monkeypatch.setattr(auction.requests, "post", forbidden_request)
 
