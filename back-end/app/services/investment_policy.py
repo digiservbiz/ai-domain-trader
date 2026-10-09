@@ -47,6 +47,8 @@ class InvestmentPolicy:
             raise ValueError("max_deployed_capital cannot exceed starting_capital")
         if self.reserve_capital > self.starting_capital:
             raise ValueError("reserve_capital cannot exceed starting_capital")
+        if self.max_deployed_capital + self.reserve_capital > self.starting_capital:
+            raise ValueError("max_deployed_capital plus reserve_capital cannot exceed starting_capital")
         if self.default_holding_years < 0:
             raise ValueError("default_holding_years must be non-negative")
 
@@ -111,12 +113,16 @@ def evaluate_candidate(
     expected_roi = (
         expected_net_profit / total_expected_cost if total_expected_cost > 0 else 0.0
     )
-    budget_remaining = max(0.0, policy.starting_capital - current_deployed_capital)
-    max_bid_by_domain_cap = max(0.0, policy.max_domain_cost - additional_fees)
-    max_bid_by_portfolio_cap = max(
-        0.0, policy.max_deployed_capital - current_deployed_capital - additional_fees
+    spendable_capital = policy.starting_capital - policy.reserve_capital
+    budget_remaining = max(
+        0.0,
+        min(
+            spendable_capital - current_deployed_capital,
+            policy.max_deployed_capital - current_deployed_capital,
+        ),
     )
-    max_bid = min(max_bid_by_domain_cap, max_bid_by_portfolio_cap, budget_remaining - additional_fees)
+    max_bid_by_domain_cap = max(0.0, policy.max_domain_cost - additional_fees)
+    max_bid = min(max_bid_by_domain_cap, budget_remaining - additional_fees)
     max_bid = max(0.0, max_bid)
 
     reasons = []
