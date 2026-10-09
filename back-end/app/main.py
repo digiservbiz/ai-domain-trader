@@ -7,16 +7,14 @@ if _sentry_dsn:
 
 from fastapi import FastAPI  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
-from slowapi import Limiter, _rate_limit_exceeded_handler  # noqa: E402
-from slowapi.util import get_remote_address  # noqa: E402
+from slowapi import _rate_limit_exceeded_handler  # noqa: E402
 from slowapi.errors import RateLimitExceeded  # noqa: E402
 from app.api.routes import router  # noqa: E402
 from app.api.ws import router as ws_router  # noqa: E402
 from app.api.auth import router as auth_router  # noqa: E402
 from app.api.portfolio import router as portfolio_router  # noqa: E402
 from app.api.snipe import router as snipe_router  # noqa: E402
-
-limiter = Limiter(key_func=get_remote_address)
+from app.core.rate_limit import limiter  # noqa: E402
 
 app = FastAPI(title="AI Domain Trader")
 app.state.limiter = limiter
