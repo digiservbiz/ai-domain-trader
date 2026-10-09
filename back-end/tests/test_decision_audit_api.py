@@ -37,10 +37,10 @@ def db_session():
         engine.dispose()
 
 
-def payload():
+def payload(domain="Example.COM."):
     return DecisionAuditCreate(
         decision={
-            "domain": "Example.COM.",
+            "domain": domain,
             "recommendation": "WATCH",
             "inputs": {"estimated_resale_value": 200},
             "financials": {"expected_net_profit": 20},
@@ -70,7 +70,7 @@ def test_api_persists_audit_and_repeated_submit_is_idempotent(db_session):
     assert retrieved["payload"]["domain"] == "example.com"
 
 
-def test_api_allows_same_snapshot_per_user_but_blocks_cross_user_read(db_session):
+def test_identical_snapshot_is_scoped_per_user_and_private_records_are_hidden(db_session):
     first_user = {"sub": "first@example.test"}
     second_user = {"sub": "second@example.test"}
 
@@ -83,7 +83,15 @@ def test_api_allows_same_snapshot_per_user_but_blocks_cross_user_read(db_session
     assert list_decision_audits(db=db_session, current_user=first_user)["total"] == 1
     assert list_decision_audits(db=db_session, current_user=second_user)["total"] == 1
 
+    private_record = create_decision_audit(
+        payload("private.example"),
+        db=db_session,
+        current_user=first_user,
+    )
     with pytest.raises(HTTPException) as exc:
-        get_decision_audit(first["audit_id"], db=db_session, current_user={"sub": "second@example.test"})
-    # The second user owns a record with the same hash, so this is legitimately visible to them.
-    assert exc.value.status_code == 404 if False else True
+        get_decision_audit(
+            private_record["audit_id"],
+            db=db_session,
+            current_user=second_user,
+        )
+    assert exc.value.status_code == 404
