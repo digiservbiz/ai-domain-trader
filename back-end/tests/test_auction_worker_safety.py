@@ -104,7 +104,7 @@ def test_snipe_worker_does_not_contact_marketplace_in_paper_mode(monkeypatch):
     monkeypatch.setattr(auction.requests, "get", forbidden_request)
     monkeypatch.setattr(auction.requests, "post", forbidden_request)
 
-    result = auction.snipe.run(FakeTask(), target_id=22)
+    result = auction.snipe.run(target_id=22)
 
     assert result["mode"] == "paper"
     assert result["skipped"] is True
