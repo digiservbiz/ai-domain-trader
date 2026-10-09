@@ -131,3 +131,10 @@ Percentages are engineering estimates, not test results. A commit is not conside
 - This is consistent with an incompatible newer bcrypt release being installed alongside Passlib 1.7.4; the traceback alone does not indicate that the user's password itself was too long.
 - Pinned `bcrypt==4.0.1` in `back-end/requirements.txt` to restore compatibility with Passlib 1.7.4. Commit: `30f7251bbf7e499e3706770e335b2fb243f4851f`.
 - Pending verification: CI on this commit; Render redeploy with the pinned dependency; retest the same Auth operation and confirm it no longer returns 500. Do not ask the user to share credentials. Keep paper mode and live-action gates unchanged.
+
+
+### 2026-10-09 — Live Render authentication smoke test passed
+- User reports live Swagger test results on the deployed API: `POST /auth/register` returned **201 Created**, `POST /auth/login` returned **200 OK**, and `GET /auth/me` returned **200 OK**.
+- These results verify the registration, login, and authenticated-session path for the user's test account. Credentials were not collected or stored in this status report.
+- GitHub Actions run #103 (run ID `37979546325`) for the bcrypt pin commit completed successfully: dependency installation, lint, and tests all passed.
+- Remaining: verify a tenant-scoped protected resource with the logged-in cookie, execute/verify the full Alembic migration chain on the deployed test database, and continue end-to-end paper-trading pipeline work. Authentication smoke tests do not imply overall product or production readiness.
