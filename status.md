@@ -11,7 +11,7 @@ Roadmap: ROADMAP.md
 | Roadmap and project tracking | 100% | ROADMAP.md and this status file committed |
 | Repository audit | ~88% | Worker ownership lookup reviewed and corrected; runtime/migration validation remains open |
 | Existing foundation usefulness | ~47% | Rough engineering estimate, not a test result |
-| Autonomous investment intelligence | ~31% | Policy engine, isolated paper ledger, and deterministic lifecycle scenario exist; evidence, orchestration, and learning remain incomplete |
+| Autonomous investment intelligence | ~32% | Policy engine, paper ledger, lifecycle simulation, and deterministic decision-audit snapshots exist; persistence, orchestration, and learning remain incomplete |
 | Production readiness | ~31% | Tenant-scoping and worker lookup fixes committed on the security branch; latest test fix awaits CI |
 | Overall target-product completion | ~24% | Not verified end-to-end; this is not a release-readiness score |
 
@@ -25,8 +25,9 @@ Percentages are engineering estimates, not test results. A commit is not conside
 
 ## Current blockers and known risks
 
-- Latest CI run `37971102372` failed at the test stage: **44 passed, 2 failed, 2 teardown errors**. Ruff and dependency installation passed. The failures were both in auction worker safety tests: tests tried to monkeypatch the read-only `can_place_live_bids` property.
-- Fixed the tests to set the two underlying gates (`TRADING_MODE` and `LIVE_TRADING_ENABLED`) explicitly. Commit: `3fc517212377090f83c40b82df0131adccc8a5e9`. A fresh CI result is still required; do not treat the fix as verified yet.
+- CI run `37971298543` confirmed Ruff and dependency installation pass, but pytest still failed: **44 passed, 2 failed**. The second issue was a test calling the bound Celery task with an extra positional task argument, causing `target_id` to be passed twice.
+- Fixed both worker test calls to invoke the bound task with `target_id=22` only. Commit: `f9ca17a907005a9c3c3d3622404077b9cf6de700`. A new CI run must verify this latest fix.
+- Added `app/services/decision_audit.py`, a storage-agnostic SHA-256 audit snapshot with normalized domain, policy inputs, financials, reasons, and evidence provenance. Added tests for stable IDs, evidence-sensitive hashes, and validation. This is not database persistence yet.
 - Portfolio and snipe-target ownership was a cross-user data isolation risk. A migration, user-scoped model fields, scoped routes, and an isolation regression test are implemented on `security/tenant-isolation`.
 - The ownership migration refuses to guess when legacy rows exist with multiple users; if exactly one user exists, legacy rows are assigned to that user. This is deliberately fail-safe.
 - Auction tasks remain fail-closed in paper mode; live purchase/bid/listing/email operations remain unauthorized.
@@ -38,7 +39,7 @@ Percentages are engineering estimates, not test results. A commit is not conside
 
 1. Recheck CI for the test fix and resolve any new failures from actual logs.
 2. Verify the ownership migration against SQLite and the production database dialect before merging.
-3. Add persistent, auditable decision history and evidence-source provenance.
+3. Persist decision-audit snapshots in the database with migrations and retrieval endpoints.
 4. Connect discovery, SEO/trend signals, valuation, and the paper scenario in a reproducible pipeline.
 5. Harden deployment configuration and provide repeatable VPS setup checks.
 6. Keep real purchase, bid, listing, and email operations disabled until tests, security gates, and explicit authorization are satisfied.
@@ -58,11 +59,11 @@ Percentages are engineering estimates, not test results. A commit is not conside
 
 ## Progress log
 
-### 2026-10-09 — Auction worker test failure diagnosed; test fix committed
-- Read the actual GitHub Actions log for run `37971102372`; dependency installation and Ruff passed, but pytest reported 44 passed and 2 failed with 2 teardown errors.
-- Both failures were caused by tests assigning to read-only property `can_place_live_bids`, not by a reported worker logic assertion.
-- Updated tests to exercise the intended dual gate directly through `TRADING_MODE` and `LIVE_TRADING_ENABLED`, preserving explicit testing of both live-enabled and paper-disabled paths.
-- Fix commit: `3fc517212377090f83c40b82df0131adccc8a5e9`. Awaiting a fresh CI run; not yet marked passing.
+### 2026-10-09 — CI follow-up and deterministic audit snapshots
+- Run `37971298543`: Ruff and dependency installation passed; pytest reported 44 passed and 2 failed because the Celery task test invocation supplied the target ID twice.
+- Fixed the bound task calls in commit `f9ca17a907005a9c3c3d3622404077b9cf6de700`; latest CI result is pending.
+- Added deterministic decision audit snapshots with SHA-256 content IDs and source provenance fields, plus regression tests. Commits: `818db51136dca442449751c3ce8a8d6e2e5dfd89` and `4eb6c388721a8efd9ba2a88cd434dd0f15612ba3`.
+- Audit snapshots are currently in-memory return values; database persistence and UI history are still outstanding.
 
 ### 2026-10-09 — End-to-end paper scenario
 - Added a deterministic candidate-to-paper-acquisition-to-renewal-to-sale scenario runner and reconciliation report.
