@@ -40,7 +40,8 @@ class PaperAccount:
 
     @property
     def deployed_capital(self) -> float:
-        return round(sum(position.acquisition_cost for position in self.positions), 2)
+        """Total carrying cost at risk, including renewals already paid."""
+        return round(sum(position.carrying_cost for position in self.positions), 2)
 
     @property
     def paper_trading_only(self) -> bool:
@@ -112,12 +113,14 @@ def acquire(
 
 
 def renew(account: PaperAccount, *, domain: str) -> PaperAccount:
-    """Simulate one annual renewal and include it in the position's carrying cost."""
+    """Simulate one annual renewal and include it in carrying cost and exposure."""
     normalized_domain = domain.strip().lower().rstrip(".")
     position = next((p for p in account.positions if p.domain == normalized_domain), None)
     if position is None:
         raise ValueError("Domain is not held in the paper portfolio")
     cost = position.annual_renewal_cost
+    if account.deployed_capital + cost > account.max_deployed_capital:
+        raise ValueError("Renewal would exceed the portfolio exposure limit")
     if cost > account.cash_balance - account.reserve_capital:
         raise ValueError("Renewal would consume reserved capital")
 
