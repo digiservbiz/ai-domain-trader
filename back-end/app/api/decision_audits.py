@@ -1,6 +1,6 @@
 """Authenticated, tenant-scoped decision audit history endpoints."""
 import json
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
@@ -85,8 +85,8 @@ def create_decision_audit(
 
 @router.get("")
 def list_decision_audits(
-    limit: int = Query(default=20, ge=1, le=100),
-    offset: int = Query(default=0, ge=0),
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+    offset: Annotated[int, Query(ge=0)] = 0,
     domain: str | None = None,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
