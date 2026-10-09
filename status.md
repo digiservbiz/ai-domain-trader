@@ -118,3 +118,10 @@ Percentages are engineering estimates, not test results. A commit is not conside
 - First Render build completed, but startup failed during `alembic upgrade head`: migration `0005_scope_user_records` referenced `0004_create_snipe_targets_table`, while the actual migration declares its revision ID as `0004`.
 - Corrected `back-end/alembic/versions/0005_scope_user_records.py` so its `down_revision` points to the actual existing revision ID `0004`.
 - Fix committed to `security/tenant-isolation`; redeployment and full migration execution are still required. Do not treat the deployment as healthy until Render starts the API and `/healthz` succeeds.
+
+### 2026-10-09 — Render deployment completed; CI uncovered audit-list default bug
+- User confirmed Render shows both deployments for commits `7e96306` and `33885c4` as **Deployed**. This confirms deployment completion, but API health and database migration success still need runtime verification.
+- Inspected GitHub Actions CI run #97 (run ID `37975286507`): lint passed; pytest result was **50 passed, 2 failed**.
+- Both failures were in `tests/test_decision_audit_api.py`: direct calls to `list_decision_audits()` received FastAPI `Query` objects as defaults, causing SQLAlchemy offset conversion to raise `TypeError`.
+- Fixed the endpoint signature with `Annotated[int, Query(...)]` metadata and plain Python defaults (`limit=20`, `offset=0`); committed as `aba8041981c73e8dfd9b4a4ddbb77b12b4ed1345`.
+- Next: rerun CI on the updated branch, verify the newest Render deployment logs show all migrations through `0006` succeeded, and test `/healthz`. Do not mark production readiness complete until these checks pass.
