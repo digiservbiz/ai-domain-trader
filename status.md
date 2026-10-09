@@ -30,15 +30,15 @@ Percentages are estimates and will change only when evidence supports the change
 - Valuation is currently simplistic and does not yet combine reliable comparable completed sales, probability of sale, total ownership costs, and buyer demand into a robust investment decision.
 - Auction logic needs stronger expected-value, all-in-cost, exposure, and emergency-stop controls before any live execution.
 - Preliminary deployment/security concerns include hardcoded database credentials in Docker Compose, database/Redis ports exposed by the compose configuration, HTTP-only Nginx configuration, and a cookie security setting that needs review.
-- The latest CI run previously observed had a lint step fail and tests were skipped. Its expired logs could not be retrieved, so the exact failure still needs to be reproduced. Do not assume tests pass.
+- The first CI run on the new policy commit failed at lint: existing import-order errors in `app/main.py` and a multiple-import line in `app/models/valuation.py`; tests were skipped. These lint issues have now been corrected in commits `d43c8bf` and `5c30327`. CI reruns are pending for the lint fixes and reserve-capital policy changes; test success is not yet verified.
 - Scrapers and marketplace adapters need verification for current provider terms, reliability, data quality, and API access.
 
 These are preliminary findings, not a completed runtime/security audit.
 
 ## Immediate next actions
 
-1. Validate the new investment-policy module and its tests in a clean checkout; fix lint/test failures.
-2. Reproduce the existing CI lint failure and run the full backend test suite.
+1. Confirm the latest CI rerun passes lint and executes tests; fix any remaining failures.
+2. Validate the investment-policy tests and reserve-capital edge cases in CI.
 3. Inspect migrations and confirm data models support per-user isolation for portfolios and auction targets.
 4. Trace API authorization and live-action paths, including the auction sniper and marketplace adapters.
 5. Wire the policy engine into a safe paper-trading API/workflow after verifying how user portfolio exposure is calculated.
@@ -58,11 +58,17 @@ These are preliminary findings, not a completed runtime/security audit.
 
 ## Progress log
 
+### 2026-10-09 — CI lint repair and reserve-capital guardrail
+- Retrieved the CI job log: Ruff reported 10 E402 import-order findings in `app/main.py` caused by Sentry initialization before application imports, plus one E401 multiple-import finding in `app/models/valuation.py`.
+- Added targeted `# noqa: E402` annotations to preserve Sentry-before-app-import initialization, and split/normalized imports in the valuation module.
+- Updated the policy to reserve €500 of the €1,000 starting capital explicitly; maximum permitted bids now use spendable capital and the policy rejects exposure/reserve combinations that exceed starting capital.
+- Added tests for reserve preservation and invalid reserve/exposure configuration. CI is still running; tests are not yet verified.
+
 ### 2026-10-09 — First implementation milestone: deterministic investment policy
 - Added `back-end/app/services/investment_policy.py`: pure decision engine for BUY_CANDIDATE / WATCH / REJECT, estimated net profit/ROI, renewal costs, maximum permitted bid, evidence confidence, trademark-risk handling, and deterministic per-domain/portfolio caps.
 - Added `back-end/tests/test_investment_policy.py` covering a positive paper candidate, high trademark risk, budget/exposure limits, low-confidence evidence, invalid inputs, and maximum bid constraints.
 - The evaluator has no network, database, payment, bidding, listing, or email side effects; results explicitly state paper trading only and purchase not executed.
-- Tests and lint were not run in this session because no repository checkout/runtime was available through the GitHub file-edit operation. The test suite must be executed before this milestone can be considered validated.
+- The initial CI run did execute lint but failed on pre-existing lint findings, so tests were skipped. Those lint findings have been fixed; the new CI run must pass lint and execute the test suite before this milestone can be considered validated.
 
 ### 2026-10-09 — Project tracking initialized
 - Added ROADMAP.md with phased delivery plan, architecture, safety rules, and exit criteria.
