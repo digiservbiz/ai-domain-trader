@@ -11,9 +11,9 @@ Roadmap: ROADMAP.md
 | Roadmap and project tracking | 100% | ROADMAP.md and this status file committed |
 | Repository audit | ~88% | Worker ownership lookup reviewed and corrected; runtime/migration validation remains open |
 | Existing foundation usefulness | ~47% | Rough engineering estimate, not a test result |
-| Autonomous investment intelligence | ~28% | Policy engine and isolated paper ledger exist; evidence, orchestration, and learning remain incomplete |
+| Autonomous investment intelligence | ~31% | Policy engine and isolated paper ledger exist; evidence, orchestration, and learning remain incomplete |
 | Production readiness | ~31% | Tenant-scoping and worker lookup fixes committed on the security branch; latest changes need CI verification |
-| Overall target-product completion | ~22% | Current code is not yet verified end-to-end |
+| Overall target-product completion | ~24% | Current code is not yet verified end-to-end |
 
 **Current phase:** Phase 1 — Safety foundation; Phase 0 audit remains open  
 **Trading mode:** Paper trading only  
@@ -36,10 +36,10 @@ Percentages are engineering estimates, not test results. A commit is not conside
 
 ## Immediate next actions
 
-1. Verify CI for the latest worker-ownership commits and new worker safety tests.
+1. Verify CI for the latest worker, scenario service, and regression-test commits.
 2. Fix any test or migration failure from actual CI logs.
 3. Verify the migration against SQLite and the production database dialect before merging.
-4. Build the deterministic paper-trading discovery-to-exit scenario.
+4. Add explicit audit/history persistence and evidence-source provenance to candidate decisions.
 5. Keep real purchase, bid, listing, and email operations disabled until test, security, and explicit-authorization gates are satisfied.
 
 ## Acceptance gates before a first usable paper-trading test
