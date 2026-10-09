@@ -16,6 +16,11 @@ class Settings:
     SECRET_KEY = os.environ["SECRET_KEY"]
     ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
     SENTRY_DSN = os.getenv("SENTRY_DSN")
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "development").strip().lower()
+    COOKIE_SECURE = os.getenv(
+        "COOKIE_SECURE",
+        "true" if ENVIRONMENT == "production" else "false",
+    ).strip().lower() == "true"
     TRADING_MODE = os.getenv("TRADING_MODE", "paper").strip().lower()
     LIVE_TRADING_ENABLED = os.getenv("LIVE_TRADING_ENABLED", "false").strip().lower() == "true"
 
