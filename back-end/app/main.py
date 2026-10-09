@@ -14,6 +14,7 @@ from app.api.ws import router as ws_router  # noqa: E402
 from app.api.auth import router as auth_router  # noqa: E402
 from app.api.portfolio import router as portfolio_router  # noqa: E402
 from app.api.snipe import router as snipe_router  # noqa: E402
+from app.api.decision_audits import router as decision_audits_router  # noqa: E402
 from app.core.rate_limit import limiter  # noqa: E402
 
 app = FastAPI(title="AI Domain Trader")
@@ -35,6 +36,7 @@ app.include_router(ws_router)
 app.include_router(auth_router)
 app.include_router(portfolio_router)
 app.include_router(snipe_router)
+app.include_router(decision_audits_router)
 
 
 @app.get("/healthz")
