@@ -31,4 +31,7 @@ jobs:
         run: ruff check app/
 
       - name: Test
+        env:
+          # Disposable test-only secret; never use this value in deployment.
+          SECRET_KEY: "ci-only-not-for-production-9e71f40c"
         run: pytest --cov=app --cov-report=term-missing
