@@ -11,9 +11,9 @@ Roadmap: ROADMAP.md
 | Roadmap and project tracking | 100% | ROADMAP.md and this status file committed to the repository |
 | Repository audit | ~80% | Preliminary source review; several checks still need reproduction/runtime validation |
 | Existing foundation usefulness | ~45% | Rough engineering estimate, not a test result |
-| Autonomous investment intelligence | ~25% | Deterministic investment-policy engine added; evidence sources, orchestration, and learning remain incomplete |
+| Autonomous investment intelligence | ~28% | Policy engine and isolated paper-trading ledger added; evidence sources, orchestration, and learning remain incomplete |
 | Production readiness | ~30% | Rough estimate; CI/security/deployment issues remain |
-| Overall target-product completion | ~18% | Initial deterministic policy engine and unit-test file added; runtime validation is still outstanding |
+| Overall target-product completion | ~21% | Deterministic policy engine and standalone paper ledger added; CI tests still need to pass |
 
 **Current phase:** Phase 1 — Safety foundation (started); Phase 0 audit remains open  
 **Trading mode:** Paper trading only  
@@ -30,15 +30,15 @@ Percentages are estimates and will change only when evidence supports the change
 - Valuation is currently simplistic and does not yet combine reliable comparable completed sales, probability of sale, total ownership costs, and buyer demand into a robust investment decision.
 - Auction logic needs stronger expected-value, all-in-cost, exposure, and emergency-stop controls before any live execution.
 - Preliminary deployment/security concerns include hardcoded database credentials in Docker Compose, database/Redis ports exposed by the compose configuration, HTTP-only Nginx configuration, and a cookie security setting that needs review.
-- The first CI run on the new policy commit failed at lint: existing import-order errors in `app/main.py` and a multiple-import line in `app/models/valuation.py`; tests were skipped. These lint issues have now been corrected in commits `d43c8bf` and `5c30327`. CI reruns are pending for the lint fixes and reserve-capital policy changes; test success is not yet verified.
+- CI confirmed Ruff lint now passes on commit `3cd4fff`. The test step then failed before collection because `SECRET_KEY` was not set in the CI environment. The workflow now supplies a disposable CI-only test secret; a new run is pending. The paper-trading ledger and its tests were added afterward, so those new files are not yet verified by CI.
 - Scrapers and marketplace adapters need verification for current provider terms, reliability, data quality, and API access.
 
 These are preliminary findings, not a completed runtime/security audit.
 
 ## Immediate next actions
 
-1. Confirm the latest CI rerun passes lint and executes tests; fix any remaining failures.
-2. Validate the investment-policy tests and reserve-capital edge cases in CI.
+1. Confirm CI passes lint and executes the complete suite with the test-only secret; fix any remaining failures.
+2. Validate the paper-ledger accounting and reserve-capital edge cases in CI.
 3. Inspect migrations and confirm data models support per-user isolation for portfolios and auction targets.
 4. Trace API authorization and live-action paths, including the auction sniper and marketplace adapters.
 5. Wire the policy engine into a safe paper-trading API/workflow after verifying how user portfolio exposure is calculated.
@@ -58,17 +58,23 @@ These are preliminary findings, not a completed runtime/security audit.
 
 ## Progress log
 
+### 2026-10-09 — Standalone paper-trading ledger
+- Added `back-end/app/services/paper_trading.py` with immutable account/position/transaction records and simulated acquire, renew, and sell operations.
+- The ledger enforces per-domain all-in cost, portfolio exposure, and reserve cash limits; records marketplace fees and realized profit/loss; explicitly labels transactions as simulated; and has no payment, registrar, marketplace, or email side effects.
+- Added `back-end/tests/test_paper_trading.py` for round-trip accounting, fees, reserve/domain caps, duplicates, invalid inputs, and unknown positions. Tests are awaiting CI verification.
+
 ### 2026-10-09 — CI lint repair and reserve-capital guardrail
 - Retrieved the CI job log: Ruff reported 10 E402 import-order findings in `app/main.py` caused by Sentry initialization before application imports, plus one E401 multiple-import finding in `app/models/valuation.py`.
 - Added targeted `# noqa: E402` annotations to preserve Sentry-before-app-import initialization, and split/normalized imports in the valuation module.
 - Updated the policy to reserve €500 of the €1,000 starting capital explicitly; maximum permitted bids now use spendable capital and the policy rejects exposure/reserve combinations that exceed starting capital.
-- Added tests for reserve preservation and invalid reserve/exposure configuration. CI is still running; tests are not yet verified.
+- Added tests for reserve preservation and invalid reserve/exposure configuration.
+- Ruff passed in CI, but tests stopped during import because `SECRET_KEY` was missing. Updated `.github/workflows/ci.yml` to provide a disposable test-only key. The next CI run must verify this fix and all tests.
 
 ### 2026-10-09 — First implementation milestone: deterministic investment policy
 - Added `back-end/app/services/investment_policy.py`: pure decision engine for BUY_CANDIDATE / WATCH / REJECT, estimated net profit/ROI, renewal costs, maximum permitted bid, evidence confidence, trademark-risk handling, and deterministic per-domain/portfolio caps.
 - Added `back-end/tests/test_investment_policy.py` covering a positive paper candidate, high trademark risk, budget/exposure limits, low-confidence evidence, invalid inputs, and maximum bid constraints.
 - The evaluator has no network, database, payment, bidding, listing, or email side effects; results explicitly state paper trading only and purchase not executed.
-- The initial CI run did execute lint but failed on pre-existing lint findings, so tests were skipped. Those lint findings have been fixed; the new CI run must pass lint and execute the test suite before this milestone can be considered validated.
+- The first CI run failed Ruff lint. The lint findings have been fixed and a subsequent run reported all lint checks passed; tests then exposed a missing CI-only `SECRET_KEY`, now fixed in the workflow. Full test success remains unverified.
 
 ### 2026-10-09 — Project tracking initialized
 - Added ROADMAP.md with phased delivery plan, architecture, safety rules, and exit criteria.
