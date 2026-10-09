@@ -43,7 +43,7 @@ def login(request: Request, response: Response, form: OAuth2PasswordRequestForm 
         value=token,
         httponly=True,
         samesite="lax",
-        secure=False,
+        secure=settings.COOKIE_SECURE,
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
     return {"email": user.email}
@@ -51,7 +51,12 @@ def login(request: Request, response: Response, form: OAuth2PasswordRequestForm 
 
 @router.post("/logout")
 def logout(response: Response):
-    response.delete_cookie("access_token")
+    response.delete_cookie(
+        "access_token",
+        httponly=True,
+        samesite="lax",
+        secure=settings.COOKIE_SECURE,
+    )
     return {"logged_out": True}
 
 

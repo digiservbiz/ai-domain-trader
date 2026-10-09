@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.config import settings
 from app.core.security import get_current_user
 from app.db.base import get_db
 from app.models.portfolio import PortfolioItem
@@ -39,10 +38,7 @@ def _user_id(db: Session, current_user: dict) -> int:
 
 
 @router.get("")
-def get_portfolio(
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
-):
+def get_portfolio(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     user_id = _user_id(db, current_user)
     items = db.query(PortfolioItem).filter(PortfolioItem.user_id == user_id).all()
     item_dicts = [_item_dict(item) for item in items]
@@ -57,17 +53,9 @@ def get_portfolio(
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-def add_portfolio_item(
-    body: PortfolioItemCreate,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
-):
+def add_portfolio_item(body: PortfolioItemCreate, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     user_id = _user_id(db, current_user)
-    existing = (
-        db.query(PortfolioItem)
-        .filter(PortfolioItem.user_id == user_id, PortfolioItem.domain == body.domain)
-        .first()
-    )
+    existing = db.query(PortfolioItem).filter(PortfolioItem.user_id == user_id, PortfolioItem.domain == body.domain).first()
     if existing:
         raise HTTPException(status_code=400, detail="Domain already in portfolio")
     item = PortfolioItem(user_id=user_id, domain=body.domain, bought_price=body.bought_price)
@@ -78,17 +66,9 @@ def add_portfolio_item(
 
 
 @router.delete("/{domain}")
-def delete_portfolio_item(
-    domain: str,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
-):
+def delete_portfolio_item(domain: str, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     user_id = _user_id(db, current_user)
-    item = (
-        db.query(PortfolioItem)
-        .filter(PortfolioItem.user_id == user_id, PortfolioItem.domain == domain)
-        .first()
-    )
+    item = db.query(PortfolioItem).filter(PortfolioItem.user_id == user_id, PortfolioItem.domain == domain).first()
     if not item:
         raise HTTPException(status_code=404, detail="Domain not found in portfolio")
     db.delete(item)
