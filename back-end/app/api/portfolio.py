@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from app.db.base import get_db
+from sqlalchemy.orm import Session
+
+from app.config import settings
 from app.core.security import get_current_user
+from app.db.base import get_db
 from app.models.portfolio import PortfolioItem
+from app.models.user import User
 from app.models.valuation import value
 
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
@@ -28,12 +31,20 @@ def _item_dict(item: PortfolioItem) -> dict:
     }
 
 
+def _user_id(db: Session, current_user: dict) -> int:
+    user = db.query(User).filter(User.email == current_user["sub"]).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    return user.id
+
+
 @router.get("")
 def get_portfolio(
     db: Session = Depends(get_db),
-    _user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
-    items = db.query(PortfolioItem).all()
+    user_id = _user_id(db, current_user)
+    items = db.query(PortfolioItem).filter(PortfolioItem.user_id == user_id).all()
     item_dicts = [_item_dict(item) for item in items]
     total_invested = sum(d["bought_price"] for d in item_dicts)
     total_current = sum(d["current_value"] for d in item_dicts)
@@ -49,12 +60,17 @@ def get_portfolio(
 def add_portfolio_item(
     body: PortfolioItemCreate,
     db: Session = Depends(get_db),
-    _user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
-    existing = db.query(PortfolioItem).filter(PortfolioItem.domain == body.domain).first()
+    user_id = _user_id(db, current_user)
+    existing = (
+        db.query(PortfolioItem)
+        .filter(PortfolioItem.user_id == user_id, PortfolioItem.domain == body.domain)
+        .first()
+    )
     if existing:
         raise HTTPException(status_code=400, detail="Domain already in portfolio")
-    item = PortfolioItem(domain=body.domain, bought_price=body.bought_price)
+    item = PortfolioItem(user_id=user_id, domain=body.domain, bought_price=body.bought_price)
     db.add(item)
     db.commit()
     db.refresh(item)
@@ -65,9 +81,14 @@ def add_portfolio_item(
 def delete_portfolio_item(
     domain: str,
     db: Session = Depends(get_db),
-    _user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
-    item = db.query(PortfolioItem).filter(PortfolioItem.domain == domain).first()
+    user_id = _user_id(db, current_user)
+    item = (
+        db.query(PortfolioItem)
+        .filter(PortfolioItem.user_id == user_id, PortfolioItem.domain == domain)
+        .first()
+    )
     if not item:
         raise HTTPException(status_code=404, detail="Domain not found in portfolio")
     db.delete(item)
