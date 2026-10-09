@@ -9,10 +9,10 @@ Roadmap: ROADMAP.md
 | Measure | Current status | Notes |
 |---|---:|---|
 | Roadmap and project tracking | 100% | ROADMAP.md and this status file committed |
-| Repository audit | ~85% | Preliminary source review; runtime/security validation remains open |
+| Repository audit | ~88% | Worker ownership lookup reviewed and corrected; runtime/migration validation remains open |
 | Existing foundation usefulness | ~47% | Rough engineering estimate, not a test result |
 | Autonomous investment intelligence | ~28% | Policy engine and isolated paper ledger exist; evidence, orchestration, and learning remain incomplete |
-| Production readiness | ~29% | Tenant isolation implemented; CI currently blocked by one lint error |
+| Production readiness | ~31% | Tenant-scoping and worker lookup fixes committed on the security branch; latest changes need CI verification |
 | Overall target-product completion | ~22% | Current code is not yet verified end-to-end |
 
 **Current phase:** Phase 1 — Safety foundation; Phase 0 audit remains open  
@@ -25,20 +25,21 @@ Percentages are engineering estimates, not test results. A commit is not conside
 
 ## Current blockers and known risks
 
-- CI run 62 reached lint successfully through dependency installation but failed on one Ruff error: unused `settings` import in `back-end/app/api/portfolio.py`. This has now been fixed on `security/tenant-isolation`; a new CI result is pending.
+- A CI run associated with commit `12d0b76cc236025f2f5b615dc3ebb52cf12c60c9` completed successfully. Newer worker-ownership changes are not yet verified by CI.
 - Portfolio and snipe-target ownership was a cross-user data isolation risk. A migration, user-scoped model fields, scoped routes, and an isolation regression test are implemented on `security/tenant-isolation`.
 - The ownership migration refuses to guess when legacy rows exist with multiple users; if exactly one user exists, legacy rows are assigned to that user. This is deliberately fail-safe.
 - Auction tasks remain fail-closed in paper mode; live purchase/bid/listing/email operations remain unauthorized.
+- Worker lookup previously selected watch records by domain only, which could update another user's row when multiple users watch the same domain. The task now receives a unique target ID, loads the persisted domain and max bid from that row, and updates only that row. The API queues by target ID. This change is committed on `security/tenant-isolation`; CI verification is pending.
 - Paper-ledger exposure accounting includes renewals; regression tests are awaiting green CI.
 - Remaining preliminary deployment/security concerns include hardcoded database credentials in Docker Compose, database/Redis ports exposed by compose configuration, HTTP-only Nginx configuration, and a cookie security setting that needs review.
 - Valuation still lacks reliable comparable completed sales, validated sale probabilities, and a robust buyer-demand signal. Scrapers and marketplace adapters require terms/access/data-quality review.
 
 ## Immediate next actions
 
-1. Verify the CI rerun after the Ruff fix.
-2. Fix any subsequent test or migration failure from actual CI logs.
-3. Merge tenant isolation only after CI and migration checks pass.
-4. Audit worker/background-job lookups for owner scoping.
+1. Verify CI for the latest worker-ownership commits.
+2. Fix any test or migration failure from actual CI logs.
+3. Add worker regression tests for same-domain targets owned by different users.
+4. Verify the migration against SQLite and the production database dialect before merging.
 5. Build the deterministic paper-trading discovery-to-exit scenario.
 6. Keep real purchase, bid, listing, and email operations disabled until test, security, and explicit-authorization gates are satisfied.
 
@@ -55,6 +56,12 @@ Percentages are engineering estimates, not test results. A commit is not conside
 - [ ] Dashboard distinguishes simulated data/results from verified real-world outcomes.
 
 ## Progress log
+
+### 2026-10-09 — Background worker ownership fix (CI verification pending)
+- Changed the auction task contract to accept a watch-target primary key instead of a domain string and caller-supplied bid amount.
+- The worker now reloads the persisted target and its bid cap from the database, then updates only that target row; same-domain watches owned by different users cannot collide during status updates.
+- Updated the API trigger and scheduled runner to enqueue target IDs.
+- Confirmed one prior CI run associated with commit `12d0b76cc236025f2f5b615dc3ebb52cf12c60c9` completed successfully; this is not evidence for the newer commits. Latest changes still require CI.
 
 ### 2026-10-09 — CI lint failure diagnosed and fixed
 - Inspected the latest PR CI run rather than guessing from source.
