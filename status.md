@@ -138,3 +138,5 @@ Percentages are engineering estimates, not test results. A commit is not conside
 - These results verify the registration, login, and authenticated-session path for the user's test account. Credentials were not collected or stored in this status report.
 - GitHub Actions run #103 (run ID `37979546325`) for the bcrypt pin commit completed successfully: dependency installation, lint, and tests all passed.
 - Remaining: verify a tenant-scoped protected resource with the logged-in cookie, execute/verify the full Alembic migration chain on the deployed test database, and continue end-to-end paper-trading pipeline work. Authentication smoke tests do not imply overall product or production readiness.
+
+- Additional live smoke test: user reports portfolio GET endpoint returned **200 OK** after successful login and `GET /auth/me`. This is a positive API response; verify that the response is correctly scoped to the authenticated account before treating tenant isolation as fully validated.
