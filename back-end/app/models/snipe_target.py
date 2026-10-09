@@ -1,11 +1,15 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Float, DateTime
+
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
+
 from app.db.base import Base
 
 
 class SnipeTarget(Base):
     __tablename__ = "snipe_targets"
+
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     domain = Column(String, index=True, nullable=False)
     max_bid = Column(Float, nullable=False)
     status = Column(String, default="watching")
