@@ -117,3 +117,28 @@ def test_maximum_bid_respects_domain_cap_and_additional_fees():
     )
 
     assert result["financials"]["maximum_permitted_bid"] == 90
+
+
+def test_maximum_bid_preserves_reserved_capital():
+    result = evaluate_candidate(
+        domain="reserve.com",
+        estimated_resale_value=500,
+        sale_probability=0.8,
+        acquisition_cost=20,
+        additional_fees=10,
+        evidence_confidence=0.8,
+        trademark_risk="low",
+    )
+
+    # €1,000 starting capital less €500 reserve leaves €500 spendable.
+    assert result["financials"]["budget_remaining_before_acquisition"] == 500
+    assert result["financials"]["maximum_permitted_bid"] == 90
+
+
+def test_policy_rejects_exposure_that_would_consume_the_reserve():
+    with pytest.raises(ValueError, match="reserve_capital"):
+        InvestmentPolicy(
+            starting_capital=1000,
+            max_deployed_capital=600,
+            reserve_capital=500,
+        ).validate()
