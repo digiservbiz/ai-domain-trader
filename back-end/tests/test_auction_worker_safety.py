@@ -76,7 +76,7 @@ def test_snipe_worker_uses_persisted_target_id_and_bid_cap(monkeypatch):
     monkeypatch.setattr(auction.requests, "get", fake_get)
     monkeypatch.setattr(auction.requests, "post", fake_post)
 
-    result = auction.snipe.run(FakeTask(), target_id=22)
+    result = auction.snipe.run(target_id=22)
 
     assert result == {"skipped": False, "mode": "live", "domain": "shared.example", "bid": 40}
     assert requests_seen[0][1].endswith("/shared.example")
