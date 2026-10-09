@@ -25,8 +25,8 @@ Percentages are engineering estimates, not test results. A commit is not conside
 
 ## Current blockers and known risks
 
-- CI run `37971298543` confirmed Ruff and dependency installation pass, but pytest still failed: **44 passed, 2 failed**. The second issue was a test calling the bound Celery task with an extra positional task argument, causing `target_id` to be passed twice.
-- Fixed both worker test calls to invoke the bound task with `target_id=22` only. Commit: `f9ca17a907005a9c3c3d3622404077b9cf6de700`. A new CI run must verify this latest fix.
+- CI run `37971419652` confirmed Ruff and dependency installation pass, and the live-enabled auction worker test plus all three decision-audit tests passed. Pytest reported **48 passed, 1 failed** because the paper-mode test retained an old bound-task invocation.
+- Corrected the remaining call to `auction.snipe.run(target_id=22)` in commit `2dfd8f9c72cd38975fd142e012061e4c428a2354`. Latest commit is on the open draft PR; a fresh green CI run is still required.
 - Added `app/services/decision_audit.py`, a storage-agnostic SHA-256 audit snapshot with normalized domain, policy inputs, financials, reasons, and evidence provenance. Added tests for stable IDs, evidence-sensitive hashes, and validation. This is not database persistence yet.
 - Portfolio and snipe-target ownership was a cross-user data isolation risk. A migration, user-scoped model fields, scoped routes, and an isolation regression test are implemented on `security/tenant-isolation`.
 - The ownership migration refuses to guess when legacy rows exist with multiple users; if exactly one user exists, legacy rows are assigned to that user. This is deliberately fail-safe.
@@ -61,7 +61,8 @@ Percentages are engineering estimates, not test results. A commit is not conside
 
 ### 2026-10-09 — CI follow-up and deterministic audit snapshots
 - Run `37971298543`: Ruff and dependency installation passed; pytest reported 44 passed and 2 failed because the Celery task test invocation supplied the target ID twice.
-- Fixed the bound task calls in commit `f9ca17a907005a9c3c3d3622404077b9cf6de700`; latest CI result is pending.
+- Run `37971419652`: Ruff passed; pytest improved to 48 passed and 1 failed. The remaining failure was a second test call not changed by the first fix.
+- Corrected that remaining call in commit `2dfd8f9c72cd38975fd142e012061e4c428a2354`; CI for the latest head is not yet confirmed green.
 - Added deterministic decision audit snapshots with SHA-256 content IDs and source provenance fields, plus regression tests. Commits: `818db51136dca442449751c3ce8a8d6e2e5dfd89` and `4eb6c388721a8efd9ba2a88cd434dd0f15612ba3`.
 - Audit snapshots are currently in-memory return values; database persistence and UI history are still outstanding.
 
