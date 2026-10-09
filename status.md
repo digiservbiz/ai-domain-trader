@@ -12,7 +12,7 @@ Roadmap: ROADMAP.md
 | Repository audit | ~85% | Preliminary source review; runtime/security validation remains open |
 | Existing foundation usefulness | ~47% | Rough engineering estimate, not a test result |
 | Autonomous investment intelligence | ~28% | Policy engine and isolated paper ledger exist; evidence, orchestration, and learning remain incomplete |
-| Production readiness | ~28% | Tenant isolation implementation is now in review; CI verification remains open |
+| Production readiness | ~29% | Tenant isolation implemented; CI currently blocked by one lint error |
 | Overall target-product completion | ~22% | Current code is not yet verified end-to-end |
 
 **Current phase:** Phase 1 — Safety foundation; Phase 0 audit remains open  
@@ -25,8 +25,8 @@ Percentages are engineering estimates, not test results. A commit is not conside
 
 ## Current blockers and known risks
 
-- Latest confirmed CI result before the tenant-isolation changes: Ruff passed, but pytest collection failed due to a circular import. The limiter has been extracted to `app/core/rate_limit.py`; subsequent CI is pending.
-- Portfolio and snipe-target ownership was a cross-user data isolation risk. A migration, user-scoped model fields, scoped portfolio routes, scoped snipe routes, and an isolation regression test have now been implemented on branch `security/tenant-isolation`; CI and migration execution are still pending.
+- CI run 62 reached lint successfully through dependency installation but failed on one Ruff error: unused `settings` import in `back-end/app/api/portfolio.py`. This has now been fixed on `security/tenant-isolation`; a new CI result is pending.
+- Portfolio and snipe-target ownership was a cross-user data isolation risk. A migration, user-scoped model fields, scoped routes, and an isolation regression test are implemented on `security/tenant-isolation`.
 - The ownership migration refuses to guess when legacy rows exist with multiple users; if exactly one user exists, legacy rows are assigned to that user. This is deliberately fail-safe.
 - Auction tasks remain fail-closed in paper mode; live purchase/bid/listing/email operations remain unauthorized.
 - Paper-ledger exposure accounting includes renewals; regression tests are awaiting green CI.
@@ -35,11 +35,12 @@ Percentages are engineering estimates, not test results. A commit is not conside
 
 ## Immediate next actions
 
-1. Run/verify CI against the tenant-isolation branch and fix every failure from actual logs.
-2. Merge tenant isolation only after CI and migration checks pass.
-3. Add worker-level ownership context wherever background jobs read portfolio/snipe records.
-4. Build the first safe paper-trading API and deterministic discovery-to-exit scenario.
-5. Keep real purchase, bid, listing, and email operations disabled until test, security, and explicit-authorization gates are satisfied.
+1. Verify the CI rerun after the Ruff fix.
+2. Fix any subsequent test or migration failure from actual CI logs.
+3. Merge tenant isolation only after CI and migration checks pass.
+4. Audit worker/background-job lookups for owner scoping.
+5. Build the deterministic paper-trading discovery-to-exit scenario.
+6. Keep real purchase, bid, listing, and email operations disabled until test, security, and explicit-authorization gates are satisfied.
 
 ## Acceptance gates before a first usable paper-trading test
 
@@ -55,30 +56,37 @@ Percentages are engineering estimates, not test results. A commit is not conside
 
 ## Progress log
 
+### 2026-10-09 — CI lint failure diagnosed and fixed
+- Inspected the latest PR CI run rather than guessing from source.
+- Dependency installation succeeded.
+- Ruff failed on exactly one issue: unused `app.config.settings` import in `app/api/portfolio.py`.
+- Removed the unused import; the branch now needs a fresh CI run to verify the fix.
+
 ### 2026-10-09 — Tenant-isolation implementation
 - Added `user_id` ownership to portfolio and snipe-target models with foreign keys to `users`.
-- Added Alembic migration `0005_scope_user_records.py` with conservative legacy-row handling: one existing user permits deterministic backfill; multiple users plus legacy rows abort rather than guessing ownership.
+- Added Alembic migration `0005_scope_user_records.py` with conservative legacy-row handling.
 - Scoped portfolio list/create/delete queries to the authenticated user.
 - Scoped snipe list/create/delete/trigger queries to the authenticated user.
 - Added a regression test proving two users can hold the same domain/watch name without seeing each other's records.
-- Changes are on branch `security/tenant-isolation`; verification is intentionally still pending.
 
-### 2026-10-09 — Paper mode and exposure safety improvements (verification pending)
-- Added `TRADING_MODE=paper` as the default and a second explicit `LIVE_TRADING_ENABLED=false` gate. The auction worker now returns without contacting GoDaddy unless both live flags are explicitly enabled.
-- The snipe API no longer queues a bid when a watch target is created. Manual trigger returns an explicit paper-mode response without enqueueing any marketplace task.
-- Added a per-domain maximum bid input validation of €100; this is only a request validation and does not replace the investment policy.
-- Corrected paper-ledger exposure to include renewals already paid; renewal is rejected if it would exceed the deployed-capital limit.
+### 2026-10-09 — Paper mode and exposure safety improvements
+- Added `TRADING_MODE=paper` as the default and a second explicit `LIVE_TRADING_ENABLED=false` gate.
+- The auction worker returns without contacting GoDaddy unless both live flags are explicitly enabled.
+- Snipe creation does not queue a bid in paper mode.
+- Manual trigger returns an explicit paper-mode response without enqueueing marketplace activity.
+- Added per-domain maximum bid input validation of €100.
+- Paper-ledger exposure includes renewals and rejects cap violations.
 
-### 2026-10-09 — CI dependency and import-cycle fixes (verification pending)
-- CI passed Ruff but failed test collection because SQLAlchemy was missing from `back-end/requirements.txt`; added pinned SQLAlchemy and Alembic.
-- The next run then reached test collection and exposed a circular import between `app.main` and `app.api.auth` through the rate limiter. Extracted the shared limiter into `app/core/rate_limit.py` and updated both imports.
+### 2026-10-09 — CI dependency and import-cycle fixes
+- Added pinned SQLAlchemy and Alembic after CI exposed missing dependencies.
+- Extracted the shared rate limiter to `app/core/rate_limit.py` after test collection exposed a circular import.
 
 ### 2026-10-09 — Standalone paper-trading ledger and deterministic investment policy
-- Added `back-end/app/services/paper_trading.py` with immutable simulated acquire, renew, and sell operations, transaction records, marketplace fee accounting, and no external side effects.
-- Added `back-end/app/services/investment_policy.py` with deterministic BUY_CANDIDATE / WATCH / REJECT recommendations, expected net profit/ROI, renewal costs, maximum bid, confidence and trademark-risk checks, and budget guardrails.
+- Added simulated acquire, renew, and sell operations, transaction records, marketplace fee accounting, and no external side effects.
+- Added deterministic BUY_CANDIDATE / WATCH / REJECT recommendations with expected net profit/ROI, renewal costs, maximum bid, confidence, trademark-risk checks, and budget guardrails.
 
 ### 2026-10-09 — Project tracking initialized
-- Added ROADMAP.md and this status tracker to document phases, safety rules, blockers, and acceptance gates.
+- Added ROADMAP.md and this status tracker.
 
 ## Update protocol
 
