@@ -29,7 +29,7 @@ Percentages are engineering estimates, not test results. A commit is not conside
 
 - CI run #78 (ID `37971601098`) completed successfully on an earlier commit. It does not verify the newer audit-persistence changes.
 - Earlier run `37971419652`: Ruff passed; pytest reported 48 passed / 1 failed. The remaining paper-mode test invocation was subsequently corrected.
-- Current latest commit: `39301bf629fab8b5a9a88c26f8ca25aa2de7b9a9`. The connector returned no CI run or combined status for this head, so current-head tests are unverified.
+- Latest known deployment-preparation commit before this status update: `1e4225e5202c07044d994f050875135bad07d937`. The GitHub connector returned no workflow run for the earlier queried head; CI has now been configured to run on pushes to `security/**`, and the new run still needs verification.
 - Alembic migrations `0005` and `0006` have not yet been executed against SQLite and the intended production database dialect.
 
 ## Implemented
@@ -49,7 +49,7 @@ Percentages are engineering estimates, not test results. A commit is not conside
 2. Execute full Alembic upgrade/downgrade chain against SQLite and validate the production dialect. Migration `0005` intentionally aborts if legacy record ownership is ambiguous.
 3. Connect discovery, SEO/trend signals, valuation, policy, paper scenario, and persisted audit into a reproducible pipeline.
 4. Build historical-sales ingestion and evaluation; distinguish completed-sale evidence from asking prices and estimates.
-5. Harden deployment: Docker Compose has known hardcoded database credentials and exposed database/Redis ports; Nginx is HTTP-only; cookie secure settings need review.
+5. Harden deployment: the Render test blueprint is added and production login cookies now use `COOKIE_SECURE=true`; frontend deployment/CORS configuration and production-database migration validation remain open. Existing Docker Compose still has hardcoded database credentials and exposed database/Redis ports.
 6. Review scraper and marketplace adapter terms, reliability, provenance, and rate limits.
 
 ## Immediate next actions
@@ -58,7 +58,7 @@ Percentages are engineering estimates, not test results. A commit is not conside
 2. Validate migration upgrade/downgrade with disposable databases.
 3. Implement the deterministic discovery → evidence → valuation → paper decision → audit pipeline.
 4. Add historical-sales learning with provenance and quality checks.
-5. Harden VPS deployment and security configuration.
+5. Finish Render API deployment, then connect the frontend using its real API URL and exact CORS origin.
 6. Keep real purchases, bids, paid listings, and email sending disabled until safety gates pass and explicit authorization is provided.
 
 ## Acceptance gates before a first usable paper-trading test
@@ -74,8 +74,16 @@ Percentages are engineering estimates, not test results. A commit is not conside
 - [x] Decision-audit model, migration, and tenant-scoped API endpoints added (current CI/migration verification outstanding).
 - [ ] Dashboard distinguishes simulated results from verified real-world outcomes.
 - [ ] Production secrets and exposed services are hardened.
+- [x] Render API/database blueprint and HTTPS-secure cookie configuration added (deployment not yet run).
 
 ## Progress log
+
+### 2026-10-09 — Render test deployment preparation
+- Added `render.yaml` for a first API-only Render deployment with a disposable free PostgreSQL database, health check, generated `SECRET_KEY`, production environment, secure cookies, and explicit paper-mode/live-bid-off flags.
+- Changed authentication cookie security to default on in production and configurable via `COOKIE_SECURE`; login and logout use the same cookie settings.
+- Updated CI push triggers to include `security/**` branches so this working branch can be tested directly.
+- No Render service has been created or deployed yet. The frontend is intentionally not in the first blueprint: its public API URL and backend CORS origin must be configured after Render provides the API hostname.
+- Latest deployment-preparation commit: `1e4225e5202c07044d994f050875135bad07d937`. CI and database migrations remain unverified.
 
 ### 2026-10-09 — Persistent decision audit history
 - Added `DecisionAudit` model and migration `0006_persist_decision_audits.py`.
