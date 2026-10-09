@@ -11,11 +11,11 @@ Roadmap: ROADMAP.md
 | Roadmap and project tracking | 100% | ROADMAP.md and this status file committed to the repository |
 | Repository audit | ~80% | Preliminary source review; several checks still need reproduction/runtime validation |
 | Existing foundation usefulness | ~45% | Rough engineering estimate, not a test result |
-| Autonomous investment intelligence | ~20–25% | Core discovery exists, but evidence quality, risk controls, lifecycle orchestration, and learning are incomplete |
+| Autonomous investment intelligence | ~25% | Deterministic investment-policy engine added; evidence sources, orchestration, and learning remain incomplete |
 | Production readiness | ~30% | Rough estimate; CI/security/deployment issues remain |
-| Overall target-product completion | ~15% | Planning estimate based on the desired end-to-end product, not a claim that all code has been tested |
+| Overall target-product completion | ~18% | Initial deterministic policy engine and unit-test file added; runtime validation is still outstanding |
 
-**Current phase:** Phase 0 — Repository audit and baseline  
+**Current phase:** Phase 1 — Safety foundation (started); Phase 0 audit remains open  
 **Trading mode:** Paper trading only  
 **Initial planning capital:** €1,000 EUR  
 **Suggested paper limits:** €100 maximum all-in per domain; €500 maximum deployed exposure; €500 reserve  
@@ -37,12 +37,12 @@ These are preliminary findings, not a completed runtime/security audit.
 
 ## Immediate next actions
 
-1. Reproduce the CI lint failure in a clean checkout and capture the exact output.
-2. Run the backend tests and frontend checks; record commands, results, and failures.
+1. Validate the new investment-policy module and its tests in a clean checkout; fix lint/test failures.
+2. Reproduce the existing CI lint failure and run the full backend test suite.
 3. Inspect migrations and confirm data models support per-user isolation for portfolios and auction targets.
 4. Trace API authorization and live-action paths, including the auction sniper and marketplace adapters.
-5. Review valuation fallbacks and add tests around missing/low-confidence data.
-6. Turn findings into prioritized fixes, then begin Phase 1 safety work.
+5. Wire the policy engine into a safe paper-trading API/workflow after verifying how user portfolio exposure is calculated.
+6. Add the paper ledger and deterministic end-to-end scenario.
 7. Keep all live-money and outbound-email behavior disabled until the paper-trading acceptance criteria are met.
 
 ## Acceptance gates before a first usable paper-trading test
@@ -57,6 +57,12 @@ These are preliminary findings, not a completed runtime/security audit.
 - [ ] Dashboard clearly labels simulated vs verified real-world data and outcomes.
 
 ## Progress log
+
+### 2026-10-09 — First implementation milestone: deterministic investment policy
+- Added `back-end/app/services/investment_policy.py`: pure decision engine for BUY_CANDIDATE / WATCH / REJECT, estimated net profit/ROI, renewal costs, maximum permitted bid, evidence confidence, trademark-risk handling, and deterministic per-domain/portfolio caps.
+- Added `back-end/tests/test_investment_policy.py` covering a positive paper candidate, high trademark risk, budget/exposure limits, low-confidence evidence, invalid inputs, and maximum bid constraints.
+- The evaluator has no network, database, payment, bidding, listing, or email side effects; results explicitly state paper trading only and purchase not executed.
+- Tests and lint were not run in this session because no repository checkout/runtime was available through the GitHub file-edit operation. The test suite must be executed before this milestone can be considered validated.
 
 ### 2026-10-09 — Project tracking initialized
 - Added ROADMAP.md with phased delivery plan, architecture, safety rules, and exit criteria.
