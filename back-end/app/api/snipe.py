@@ -73,7 +73,12 @@ def trigger_snipe(domain: str, db: Session = Depends(get_db), current_user: dict
     if not target:
         raise HTTPException(status_code=404, detail="Snipe target not found")
     if not settings.can_place_live_bids:
-        return {"triggered": False, "mode": "paper", "domain": domain, "message": "Live bidding is disabled; no marketplace action was queued."}
+        return {
+            "triggered": False,
+            "mode": "paper",
+            "domain": domain,
+            "message": "Live bidding is disabled; no marketplace action was queued.",
+        }
     from app.tasks.auction import snipe
-    snipe.delay(target.domain, target.max_bid)
+    snipe.delay(target.id)
     return {"triggered": True, "mode": "live", "domain": domain}
