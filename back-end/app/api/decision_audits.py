@@ -28,14 +28,13 @@ def _user_id(db: Session, current_user: dict) -> int:
 
 
 def _record_dict(record: DecisionAudit) -> dict[str, Any]:
-    payload = json.loads(record.payload_json)
     return {
         "audit_id": record.audit_id,
         "domain": record.domain,
         "recommendation": record.recommendation,
         "hash_algorithm": record.hash_algorithm,
         "created_at": record.created_at.isoformat(),
-        "payload": payload,
+        "payload": json.loads(record.payload_json),
     }
 
 
@@ -51,11 +50,12 @@ def create_decision_audit(
     except (TypeError, ValueError) as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
 
-    existing = db.query(DecisionAudit).filter(DecisionAudit.audit_id == snapshot["audit_id"]).first()
+    query = db.query(DecisionAudit).filter(
+        DecisionAudit.user_id == user_id,
+        DecisionAudit.audit_id == snapshot["audit_id"],
+    )
+    existing = query.first()
     if existing:
-        if existing.user_id != user_id:
-            # Do not reveal another account's record or whether its content matched.
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Audit snapshot already exists")
         return {**_record_dict(existing), "created": False}
 
     record = DecisionAudit(
@@ -71,10 +71,12 @@ def create_decision_audit(
         db.commit()
     except Exception:
         db.rollback()
-        # A concurrent identical insert can hit the unique constraint; return the
-        # existing same-user record only after re-reading it safely.
-        existing = db.query(DecisionAudit).filter(DecisionAudit.audit_id == snapshot["audit_id"]).first()
-        if existing and existing.user_id == user_id:
+        # Re-read only this user's record after a possible concurrent duplicate insert.
+        existing = db.query(DecisionAudit).filter(
+            DecisionAudit.user_id == user_id,
+            DecisionAudit.audit_id == snapshot["audit_id"],
+        ).first()
+        if existing:
             return {**_record_dict(existing), "created": False}
         raise
     db.refresh(record)
