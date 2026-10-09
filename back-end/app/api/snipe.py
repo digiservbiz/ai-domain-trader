@@ -1,16 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.db.base import get_db
 from app.core.security import get_current_user
 from app.models.snipe_target import SnipeTarget
+from app.config import settings
 
 router = APIRouter(prefix="/snipe", tags=["snipe"])
 
 
 class SnipeCreate(BaseModel):
     domain: str
-    max_bid: float
+    max_bid: float = Field(gt=0, le=100)
 
 
 def _target_dict(t: SnipeTarget) -> dict:
@@ -43,15 +44,12 @@ def create_snipe_target(
     existing = db.query(SnipeTarget).filter_by(domain=body.domain).first()
     if existing:
         raise HTTPException(status_code=400, detail="Domain already has a snipe target")
-    target = SnipeTarget(domain=body.domain, max_bid=body.max_bid)
+    target = SnipeTarget(domain=body.domain, max_bid=body.max_bid, status="paper_watch")
     db.add(target)
     db.commit()
     db.refresh(target)
-
-    from app.tasks.auction import snipe
-    snipe.delay(body.domain, body.max_bid)
-
-    return _target_dict(target)
+    # Creating a watch target never queues a live marketplace action.
+    return {**_target_dict(target), "mode": settings.TRADING_MODE, "live_bid_queued": False}
 
 
 @router.delete("/{domain}")
@@ -77,8 +75,14 @@ def trigger_snipe(
     target = db.query(SnipeTarget).filter_by(domain=domain).first()
     if not target:
         raise HTTPException(status_code=404, detail="Snipe target not found")
+    if not settings.can_place_live_bids:
+        return {
+            "triggered": False,
+            "mode": "paper",
+            "domain": domain,
+            "message": "Live bidding is disabled; no marketplace action was queued.",
+        }
 
     from app.tasks.auction import snipe
     snipe.delay(target.domain, target.max_bid)
-
-    return {"triggered": True, "domain": domain}
+    return {"triggered": True, "mode": "live", "domain": domain}
