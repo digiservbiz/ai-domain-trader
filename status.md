@@ -140,3 +140,8 @@ Percentages are engineering estimates, not test results. A commit is not conside
 - Remaining: verify a tenant-scoped protected resource with the logged-in cookie, execute/verify the full Alembic migration chain on the deployed test database, and continue end-to-end paper-trading pipeline work. Authentication smoke tests do not imply overall product or production readiness.
 
 - Additional live smoke test: user reports portfolio GET endpoint returned **200 OK** after successful login and `GET /auth/me`. This is a positive API response; verify that the response is correctly scoped to the authenticated account before treating tenant isolation as fully validated.
+
+### 2026-10-09 — Live decision-audit API smoke tests
+- User reports `GET /decision-audits` returned **200 OK**.
+- First `POST /decision-audits` test returned **422** because the request omitted required decision fields (`inputs`, `financials`, `policy`, `reasons`); the validation error correctly identified the missing fields.
+- Retried with all required fields and a fictional test domain; user reports **201 Created**. This verifies a decision-audit record can be created through the deployed API. It does not yet verify retrieving that record by its returned audit ID or tenant isolation between two separate accounts.
