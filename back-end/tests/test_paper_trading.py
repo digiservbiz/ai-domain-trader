@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 import pytest
 
 from app.services.paper_trading import acquire, new_account, renew, sell
@@ -20,6 +22,7 @@ def test_paper_round_trip_reconciles_cash_costs_fees_and_profit():
     account = renew(account, domain="brandable.com")
     assert account.cash_balance == 930
     assert account.positions[0].carrying_cost == 70
+    assert account.deployed_capital == 70
 
     account = sell(account, domain="brandable.com", gross_sale_price=500)
     assert account.cash_balance == 1380
@@ -34,12 +37,22 @@ def test_paper_acquisition_enforces_domain_cap_and_reserve():
     with pytest.raises(ValueError, match="per-domain"):
         acquire(account, domain="too-expensive.com", acquisition_cost=99, additional_fees=2)
 
-    constrained = new_account()
-    from dataclasses import replace
-
-    constrained = replace(constrained, cash_balance=510)
+    constrained = replace(new_account(), cash_balance=510)
     with pytest.raises(ValueError, match="reserved capital"):
         acquire(constrained, domain="reserve.com", acquisition_cost=20)
+
+
+def test_renewal_cannot_push_deployed_exposure_over_cap():
+    account = replace(new_account(), max_deployed_capital=60)
+    account = acquire(
+        account,
+        domain="renewal-cap.com",
+        acquisition_cost=50,
+        additional_fees=5,
+        annual_renewal_cost=15,
+    )
+    with pytest.raises(ValueError, match="exposure limit"):
+        renew(account, domain="renewal-cap.com")
 
 
 def test_paper_ledger_rejects_duplicate_domains_and_unknown_sale():
