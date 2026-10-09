@@ -145,3 +145,5 @@ Percentages are engineering estimates, not test results. A commit is not conside
 - User reports `GET /decision-audits` returned **200 OK**.
 - First `POST /decision-audits` test returned **422** because the request omitted required decision fields (`inputs`, `financials`, `policy`, `reasons`); the validation error correctly identified the missing fields.
 - Retried with all required fields and a fictional test domain; user reports **201 Created**. This verifies a decision-audit record can be created through the deployed API. It does not yet verify retrieving that record by its returned audit ID or tenant isolation between two separate accounts.
+
+- Additional live smoke test: user reports `GET /decision-audits/{audit_id}` returned **200 OK** for the audit created through the API, confirming create-then-retrieve works in the deployed test environment. Cross-account tenant-isolation and full migration-chain verification remain separate outstanding checks.
